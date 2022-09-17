@@ -138,30 +138,110 @@ class Game extends Phaser.Scene {
         this.playerHealth = new HealthBar(this, 100, 100);
 
         this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers(this.playerChar, { start: 0, end: 1 }),
+            key: 'siamese-left',
+            frames: this.anims.generateFrameNumbers("siamese", { start: 0, end: 1 }),
             frameRate: 5,
             repeat: -1
         });
 
         this.anims.create({
-            key: 'leftpause',
-            frames: [ { key: this.playerChar, frame: 0 } ],
+            key: 'siamese-leftpause',
+            frames: [ { key: "siamese", frame: 0 } ],
             frameRate: 20
         });
 
         this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers(this.playerChar, { start: 2, end: 3 }),
+            key: 'siamese-right',
+            frames: this.anims.generateFrameNumbers("siamese", { start: 2, end: 3 }),
             frameRate: 5,
             repeat: -1
         });
 
         this.anims.create({
-            key: 'rightpause',
-            frames: [ { key: this.playerChar, frame: 2 } ],
+            key: 'siamese-rightpause',
+            frames: [ { key: "siamese", frame: 2 } ],
             frameRate: 20
         });
+
+        this.anims.create({
+            key: 'tabby-left',
+            frames: this.anims.generateFrameNumbers("tabby", { start: 0, end: 1 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'tabby-leftpause',
+            frames: [ { key: "tabby", frame: 0 } ],
+            frameRate: 20
+        });
+
+        this.anims.create({
+            key: 'tabby-right',
+            frames: this.anims.generateFrameNumbers("tabby", { start: 2, end: 3 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'tabby-rightpause',
+            frames: [ { key: "tabby", frame: 2 } ],
+            frameRate: 20
+        });
+
+        this.anims.create({
+            key: 'grey-left',
+            frames: this.anims.generateFrameNumbers("grey", { start: 0, end: 1 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'grey-leftpause',
+            frames: [ { key: "grey", frame: 0 } ],
+            frameRate: 20
+        });
+
+        this.anims.create({
+            key: 'grey-right',
+            frames: this.anims.generateFrameNumbers("grey", { start: 2, end: 3 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'grey-rightpause',
+            frames: [ { key: "grey", frame: 2 } ],
+            frameRate: 20
+        });
+
+        this.anims.create({
+            key: 'black-left',
+            frames: this.anims.generateFrameNumbers("black", { start: 0, end: 1 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'black-leftpause',
+            frames: [ { key: "black", frame: 0 } ],
+            frameRate: 20
+        });
+
+        this.anims.create({
+            key: 'black-right',
+            frames: this.anims.generateFrameNumbers("black", { start: 2, end: 3 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'black-rightpause',
+            frames: [ { key: "black", frame: 2 } ],
+            frameRate: 20
+        });
+
+
 
         this.physics.add.collider(this.player, this.platforms);
 
@@ -266,10 +346,10 @@ class Game extends Phaser.Scene {
             this.player.setVelocityX(-200);
 
             if (pointer.worldX > this.player.x){
-                this.player.anims.play('right', true);
+                this.player.anims.play(this.playerChar+'-right', true);
             }
             else{
-                this.player.anims.play('left', true);
+                this.player.anims.play(this.playerChar+'-left', true);
             }
         }
         else if (cursors.right.isDown)
@@ -277,10 +357,10 @@ class Game extends Phaser.Scene {
             this.player.setVelocityX(200);
 
             if (pointer.worldX > this.player.x){
-                this.player.anims.play('right', true);
+                this.player.anims.play(this.playerChar+'-right', true);
             }
             else{
-                this.player.anims.play('left', true);
+                this.player.anims.play(this.playerChar+'-left', true);
             }
         }
         else
@@ -288,10 +368,10 @@ class Game extends Phaser.Scene {
             this.player.setVelocityX(0);
 
             if (pointer.worldX > this.player.x){
-                this.player.anims.play('rightpause');
+                this.player.anims.play(this.playerChar+'-rightpause');
             }
             else{
-                this.player.anims.play('leftpause');
+                this.player.anims.play(this.playerChar+'-leftpause');
             }
         }
 
