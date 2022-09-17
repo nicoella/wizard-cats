@@ -136,7 +136,7 @@ class Game extends Phaser.Scene {
         this.player = this.physics.add.sprite(100, 450, this.playerChar).setDepth(1000);
 
         this.player.setBounce(0.2);
-        this.player.body.setGravityY(300);
+        this.player.body.setGravityY(700);
         this.player.setCollideWorldBounds(true);
 
         this.playerHealth = new HealthBar(this, 46, 107);
@@ -277,7 +277,7 @@ class Game extends Phaser.Scene {
                 this.physics.add.collider(newChar, this.platforms);
                 this.physics.add.collider(newChar, this.drawnPlatform);
                 newChar.setBounce(0.2);
-                newChar.body.setGravityY(300);
+                newChar.body.setGravityY(700);
                 newChar.playerHealth = new HealthBar(this, 706, 107);
                 this.playerData[addedPlayer.id] = newChar;
             }
@@ -300,7 +300,7 @@ class Game extends Phaser.Scene {
                 Phaser.GameObjects.Image.call(this, scene, 0, 0, 'orb');
     
                 this.speed = Phaser.Math.GetSpeed(500, 1);
-                
+
             },
     
             fire: function (x, y, rise, run, platforms, game)
@@ -327,11 +327,20 @@ class Game extends Phaser.Scene {
             },
         });
     
-        this.bullets = this.add.group({
+        this.bullets = this.physics.add.group({
             classType: Bullet,
             maxSize: 30,
             runChildUpdate: true
         });
+
+        
+        function f (a, b) {
+            a.setActive(false);
+            a.setVisible(false);
+        }
+        this.physics.add.overlap(this.bullets, this.platforms, f, null, this);
+
+        this.physics.add.collider(this.bullets, this.platforms);
     }
 
     update (){
