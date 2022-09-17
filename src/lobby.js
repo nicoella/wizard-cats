@@ -54,10 +54,10 @@ class Lobby extends Phaser.Scene {
         this.load.image('waiting_text','assets/waiting.png');
         this.load.image('select_text','assets/character-select-text.png');
         this.load.image('link_text','assets/game-link-text.png');
-        this.load.image('black','assets/portrait-black.png');
-        this.load.image('tabby','assets/portrait-tabby.png');
-        this.load.image('gray','assets/portrait-gray.png');
-        this.load.image('siamese','assets/portrait-siamese.png');
+        this.load.image('p-black','assets/portrait-black.png');
+        this.load.image('p-tabby','assets/portrait-tabby.png');
+        this.load.image('p-gray','assets/portrait-gray.png');
+        this.load.image('p-siamese','assets/portrait-siamese.png');
         this.load.image('none','assets/portrait-none.png');
     }
 
@@ -77,6 +77,9 @@ class Lobby extends Phaser.Scene {
                     animation: 0,
                 })
                 
+                set(ref(this.db, `${this.gameCode}/properties`), {
+                    start: false
+                })
                 
             } else {
                 // User is signed out
@@ -108,8 +111,8 @@ class Lobby extends Phaser.Scene {
         this.waiting = this.add.image(770,180,'waiting_text').setOrigin(1,0);
         this.add.image(770,230,'none').setOrigin(1,0);
 
-        this.add.image(250,435,'link_text').setOrigin(0);
-        this.add.text(455,443,`${this.gameCode}`,{fontFamily: 'minecraft '}).setOrigin(0.5);;
+        this.add.image(300,435,'link_text').setOrigin(0);
+        this.add.text(460,443,this.gameCode.charAt(0)+" "+this.gameCode.charAt(1)+" "+this.gameCode.charAt(2)+" "+this.gameCode.charAt(3),{fontFamily: 'minecraft '}).setOrigin(0.5);;
         this.add.image(400,500,'start');
 
         // firebase stuff
@@ -131,25 +134,25 @@ class Lobby extends Phaser.Scene {
                             if(!this.portraits["black"]) this.portraits["black"] = this.add.image(291,300,'selected');
                             this.selected["black"] = true;
                             if(this.playerCount==2) {
-                                this.add.image(30,230,'black').setOrigin(0,0);  
+                                this.add.image(30,230,'p-black').setOrigin(0,0);  
                             }
                         } else if(char=="tabby") {
                             if(!this.portraits["tabby"]) this.portraits["tabby"] = this.add.image(364,300,'selected');
                             this.selected["tabby"] = true;
                             if(this.playerCount==2) {
-                                this.add.image(30,230,'tabby').setOrigin(0,0);  
+                                this.add.image(30,230,'p-tabby').setOrigin(0,0);  
                             }
                         } else if(char=="gray") {
                             if(!this.portraits["gray"]) this.portraits["gray"] = this.add.image(437,300,'selected');
                             this.selected["gray"] = true;
                             if(this.playerCount==2) {
-                                this.add.image(30,230,'gray').setOrigin(0,0);  
+                                this.add.image(30,230,'p-gray').setOrigin(0,0);  
                             }
                         } else if(char=="siamese") {
                             if(!this.portraits["siamese"]) this.portraits["siamese"] = this.add.image(510,300,'selected');
                             this.seleted["siamese"] = true;
                             if(this.playerCount==2) {
-                                this.add.image(30,230,'siamese').setOrigin(0,0);  
+                                this.add.image(30,230,'p-siamese').setOrigin(0,0);  
                             }
                         }
                       }
@@ -166,6 +169,15 @@ class Lobby extends Phaser.Scene {
                 this.temp.destroy();
             }
         })
+
+        const propertiesRef = ref(this.db, `${this.gameCode}/properties`);
+        onChildChanged(propertiesRef, (snapshot) => {
+            const update = snapshot.val();
+            console.log(update);
+            if(update == true) {
+                this.scene.start("Game", { playerNumber: this.playerNumber, playerChar: this.prevSelect, gameCode: this.gameCode, playerCount: this.playerCount});
+            }
+        });
 
         onChildChanged(allPlayersRef, (snapshot) => {
             const player = snapshot.val();
@@ -189,23 +201,23 @@ class Lobby extends Phaser.Scene {
                 }
                 if(player.playerCount == 1) {
                     if(player.character=="black") {
-                        this.add.image(30,230,'black').setOrigin(0,0);  
+                        this.add.image(30,230,'p-black').setOrigin(0,0);  
                     } else if(player.character=="tabby") {
-                        this.add.image(30,230,'tabby').setOrigin(0,0);  
+                        this.add.image(30,230,'p-tabby').setOrigin(0,0);  
                     } else if(player.character=="gray") {
-                        this.add.image(30,230,'gray').setOrigin(0,0);  
+                        this.add.image(30,230,'p-gray').setOrigin(0,0);  
                     } else if(player.character=="siamese") {
-                        this.add.image(30,230,'siamese').setOrigin(0,0);  
+                        this.add.image(30,230,'p-siamese').setOrigin(0,0);  
                     }
                 } else {
                     if(player.character=="black") {
-                        this.add.image(770,230,'black').setOrigin(1,0);  
+                        this.add.image(770,230,'p-black').setOrigin(1,0);  
                     } else if(player.character=="tabby") {
-                        this.add.image(770,230,'tabby').setOrigin(1,0);  
+                        this.add.image(770,230,'p-tabby').setOrigin(1,0);  
                     } else if(player.character=="gray") {
-                        this.add.image(770,230,'gray').setOrigin(1,0);  
+                        this.add.image(770,230,'p-gray').setOrigin(1,0);  
                     } else if(player.character=="siamese") {
-                        this.add.image(770,230,'siamese').setOrigin(1,0);  
+                        this.add.image(770,230,'p-siamese').setOrigin(1,0);  
                     }
                 }
             }
@@ -223,12 +235,12 @@ class Lobby extends Phaser.Scene {
                         this.selected["black"] = true;
                         this.portraits["black"] = this.add.image(291,300,'selected');
                         if(this.playerCount==1) {
-                            this.add.image(30,230,'black').setOrigin(0,0);  
+                            this.add.image(30,230,'p-black').setOrigin(0,0);  
                         } else {
-                            this.add.image(770,230,'black').setOrigin(1,0);  
+                            this.add.image(770,230,'p-black').setOrigin(1,0);  
                         }                  
                         set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
-                            character: "cat-black",
+                            character: "black",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
@@ -249,12 +261,12 @@ class Lobby extends Phaser.Scene {
                         this.selected["tabby"] = true;
                         this.portraits["tabby"] = this.add.image(364,300,'selected');
                         if(this.playerCount==1) {
-                            this.add.image(30,230,'tabby').setOrigin(0,0);  
+                            this.add.image(30,230,'p-tabby').setOrigin(0,0);  
                         } else {
-                            this.add.image(770,230,'tabby').setOrigin(1,0);  
+                            this.add.image(770,230,'p-tabby').setOrigin(1,0);  
                         } 
                         set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
-                            character: "cat-tabby",
+                            character: "tabby",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
@@ -274,12 +286,12 @@ class Lobby extends Phaser.Scene {
                         this.selected["gray"] = true;
                         this.portraits["gray"] = this.add.image(437,300,'selected');
                         if(this.playerCount==1) {
-                            this.add.image(30,230,'gray').setOrigin(0,0);  
+                            this.add.image(30,230,'p-gray').setOrigin(0,0);  
                         } else {
-                            this.add.image(770,230,'gray').setOrigin(1,0);  
+                            this.add.image(770,230,'p-gray').setOrigin(1,0);  
                         } 
                         set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
-                            character: "cat-gray",
+                            character: "gray",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
@@ -299,12 +311,12 @@ class Lobby extends Phaser.Scene {
                         this.selected["siamese"] = true;
                         this.portraits["siamese"] = this.add.image(510,300,'selected');
                         if(this.playerCount==1) {
-                            this.add.image(30,230,'siamese').setOrigin(0,0);  
+                            this.add.image(30,230,'p-siamese').setOrigin(0,0);  
                         } else {
-                            this.add.image(770,230,'siamese').setOrigin(1,0);  
+                            this.add.image(770,230,'p-siamese').setOrigin(1,0);  
                         } 
                         set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
-                            character: "cat-siamese",
+                            character: "siamese",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
@@ -325,7 +337,11 @@ class Lobby extends Phaser.Scene {
         this.input.on('pointerdown', function(pointer) {
             if(this.game.input.mousePointer.x >= 326 && this.game.input.mousePointer.x <= 474 && this.input.mousePointer.y >= 471 && this.input.mousePointer.y <= 529) {
                 console.log("lobby -> game");
+                set(ref(this.db, `${this.gameCode}/properties`), {
+                    start: true
+                })
                 this.scene.start("Game", { playerNumber: this.playerNumber, playerChar: this.prevSelect, gameCode: this.gameCode, playerCount: this.playerCount});
+                
             }
         }, this);
     }

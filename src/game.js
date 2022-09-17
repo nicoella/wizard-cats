@@ -27,6 +27,8 @@ class HealthBar {
         this.draw();
 
         scene.add.existing(this.bar);
+
+        this.playerData;
     }
 
     decrease (amount)
@@ -96,19 +98,19 @@ class Game extends Phaser.Scene {
         this.load.image('platform1', 'assets/platform1.png');
         this.load.image('platform2', 'assets/platform2.png');
         this.load.image('vines','assets/vines.png');
-        this.load.spritesheet('cat-tabby', 
+        this.load.spritesheet('tabby', 
             'assets/cat-tabby.png',
             { frameWidth: 52, frameHeight: 48 }
         );
-        this.load.spritesheet('cat-siamese', 
+        this.load.spritesheet('siamese', 
             'assets/cat-siamese.png',
             { frameWidth: 52, frameHeight: 48 }
         );
-        this.load.spritesheet('cat-grey', 
+        this.load.spritesheet('grey', 
             'assets/cat-grey.png',
             { frameWidth: 52, frameHeight: 48 }
         );
-        this.load.spritesheet('cat-black', 
+        this.load.spritesheet('black', 
             'assets/cat-black.png',
             { frameWidth: 52, frameHeight: 48 }
         );
