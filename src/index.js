@@ -2,6 +2,7 @@ import { Physics } from "phaser";
 import Game from './game';
 import MainMenu from './mainmenu';
 import Lobby from './lobby';
+import Join from './join';
 
 var config = {
     type: Phaser.AUTO,
@@ -15,7 +16,7 @@ var config = {
             gravity: { y: 300 }
         }
     },
-    scene: [MainMenu,Lobby,Game]
+    scene: [MainMenu,Lobby,Game,Join]
 };
 
 function loadFont(name, url) {

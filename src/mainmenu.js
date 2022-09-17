@@ -21,8 +21,8 @@ class MainMenu extends Phaser.Scene {
                     console.log("create a new game");
                     this.scene.start('Lobby');
                 } else if(this.game.input.mousePointer.x >= 536 && this.game.input.mousePointer.x <= 682) { //unknown button
-                    console.log("temp button");
-                    this.scene.start("Game");
+                    this.scene.start('Join');
+                    console.log("join a game");
                 }
             }
         }, this);

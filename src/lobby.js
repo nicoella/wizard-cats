@@ -31,6 +31,35 @@ class Lobby extends Phaser.Scene {
         this.db = getDatabase();
         this.waiting;
         this.temp;
+        this.gameCode = "";
+        this.allPlayersRef = ref(this.db, this.gameCode+'/players');
+    }
+
+    init(data) {
+        console.log('init', data);
+        if(this.gameCode == "" && data.gameCode!=undefined) {
+            this.gameCode = data.gameCode;
+
+            const uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
+            this.playerCount = 0;
+            this.allPlayersRef = ref(this.db, this.gameCode+'/players');
+
+            var max = 0;
+            get(child(ref(this.db), this.gameCode + `/players`)).then((data) => {
+                if (this.playerCount == 0) {
+                    for (var key in data.val()) {
+                        for (var item in data.val()[key]) {
+                            if (item == 'playerCount') {
+                                max = Math.max(max, data.val()[key][item]);
+                                console.log(data.val()[key][item] + " " + max);
+                            }
+                        }
+                    }
+                    this.playerCount = max % 2 + 1;
+                    update(uref, { playerCount: this.playerCount });
+                }
+            });
+        }
     }
 
     preload (){
@@ -56,28 +85,42 @@ class Lobby extends Phaser.Scene {
 
     create (){
         onAuthStateChanged(this.auth, (user) => {
+            console.log(this.gameCode);
             if (user != null) {
+                if(this.gameCode == "") {
+                    var i = 0;
+                    var alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                    while(i<4) {
+                        this.gameCode += alpha.charAt(Math.floor(Math.random() * alpha.length));
+                        i++;
+                    }
+                    console.log(this.gameCode);
+                    this.allPlayersRef = ref(this.db, this.gameCode+'/players');
+
+                    const uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
+                    this.playerCount = 0;
+                    console.log("AHHHH"+this.gameCode);
+                    var max = 0;
+                    get(child(ref(this.db), this.gameCode + `/players`)).then((data) => {
+                        if (this.playerCount == 0) {
+                            for (var key in data.val()) {
+                                for (var item in data.val()[key]) {
+                                    if (item == 'playerCount') {
+                                        max = Math.max(max, data.val()[key][item]);
+                                        console.log(data.val()[key][item] + " " + max);
+                                    }
+                                }
+                            }
+                            this.playerCount = max % 2 + 1;
+                            update(uref, { playerCount: this.playerCount });
+                        }
+                    });
+                }
                 // User is signed in, see docs for a list of available properties
                 // https://firebase.google.com/docs/reference/js/firebase.User
                 // this.uid = user.uid;
-                const uref = ref(this.db, `players/${this.playerNumber}`);
-                this.playerCount = 0;
-
-                var max = 0;
-                get(child(ref(this.db), `players`)).then((data) => {
-                    if(this.playerCount==0) {
-                      for(var key in data.val()) {
-                        for(var item in data.val()[key]) {
-                          if(item=='playerCount') {
-                            max = Math.max(max, data.val()[key][item]);
-                            console.log(data.val()[key][item]+" "+max);
-                          }
-                        }
-                      }
-                      this.playerCount = max%2+1;
-                      update(uref,{playerCount:this.playerCount});
-                    }
-                  });
+                const uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
+                
 
                 set(uref, {
                     id: this.playerNumber,
@@ -91,7 +134,7 @@ class Lobby extends Phaser.Scene {
                 // User is signed out
                 console.log("nope");
             }
-            onDisconnect(thisPlayerRef).remove();
+            onDisconnect(this.allPlayersRef).remove();
         });
         
         signInAnonymously(this.auth)
@@ -118,19 +161,20 @@ class Lobby extends Phaser.Scene {
         this.add.image(770,230,'none').setOrigin(1,0);
 
         this.add.image(250,435,'link_text').setOrigin(0);
-        this.add.text(455,443,'http://192.168.2.15:3000',{fontFamily: 'minecraft '}).setOrigin(0.5);;
+        this.add.text(455,443,`${this.gameCode}`,{fontFamily: 'minecraft '}).setOrigin(0.5);;
         this.add.image(400,500,'start');
 
         // firebase stuff
-        var thisPlayerRef = ref(this.db, 'players/' + this.playerNumber);
-        const allPlayersRef = ref(this.db, 'players');
-        onValue(allPlayersRef, (snapshot) => {  // update location of all the other players
+        var thisPlayerRef = ref(this.db, this.gameCode+'/players/' + this.playerNumber);
+        onValue(this.allPlayersRef, (snapshot) => {  // update location of all the other players
             this.players = snapshot.val() || {};
+            
         })
 
-        onChildAdded(allPlayersRef, (snapshot) => {
+        onChildAdded(this.allPlayersRef, (snapshot) => {
+            console.log("what");
             const addedPlayer = snapshot.val();            
-            get(child(ref(this.db), `players`)).then((data) => {
+            get(child(ref(this.db), this.gameCode+`/players`)).then((data) => {
                   for(var key in data.val()) {
                     for(var item in data.val()[key]) {
                       if(item=='character') {
@@ -165,20 +209,18 @@ class Lobby extends Phaser.Scene {
                     }
                   }
               });
-            if(addedPlayer.id!=this.playerNumber) {
-                if (this.playerCount==1){
-                    this.waiting.destroy();
-                    this.add.image(770,200,'player2_text').setOrigin(1,0);
-                } else {
-                    this.waiting.destroy();
-                    this.add.image(705,200,'player2_text').setOrigin(1,0);
-                    this.add.image(765,200,'you_text').setOrigin(1,0);
-                    this.temp.destroy();
-                }
+            if (this.playerCount == 1) {
+                this.waiting.destroy();
+                this.add.image(770, 200, 'player2_text').setOrigin(1, 0);
+            } else {
+                this.waiting.destroy();
+                this.add.image(705, 200, 'player2_text').setOrigin(1, 0);
+                this.add.image(765, 200, 'you_text').setOrigin(1, 0);
+                this.temp.destroy();
             }
         })
 
-        onChildChanged(allPlayersRef, (snapshot) => {
+        onChildChanged(this.allPlayersRef, (snapshot) => {
             const player = snapshot.val();
             if(player.id != this.playerNumber) {
                 if(player.character) {
@@ -228,7 +270,6 @@ class Lobby extends Phaser.Scene {
         })
 
         this.input.on('pointerdown', function(pointer) { //kinda buggy
-            console.log(this.playerCount);
             if(this.game.input.mousePointer.y >= 266 && this.game.input.mousePointer.y <= 334) {
                 if(this.game.input.mousePointer.x >= 257 && this.game.input.mousePointer.x <= 326) {
                     if(this.prevSelect != "black" && !this.selected["black"]) {
@@ -239,7 +280,7 @@ class Lobby extends Phaser.Scene {
                         } else {
                             this.add.image(770,230,'black').setOrigin(1,0);  
                         }                  
-                        set(ref(this.db, `players/${this.playerNumber}`), {
+                        set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
                             character: "black",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
@@ -265,7 +306,7 @@ class Lobby extends Phaser.Scene {
                         } else {
                             this.add.image(770,230,'tabby').setOrigin(1,0);  
                         } 
-                        set(ref(this.db, `players/${this.playerNumber}`), {
+                        set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
                             character: "tabby",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
@@ -290,7 +331,7 @@ class Lobby extends Phaser.Scene {
                         } else {
                             this.add.image(770,230,'gray').setOrigin(1,0);  
                         } 
-                        set(ref(this.db, `players/${this.playerNumber}`), {
+                        set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
                             character: "gray",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
@@ -315,7 +356,7 @@ class Lobby extends Phaser.Scene {
                         } else {
                             this.add.image(770,230,'siamese').setOrigin(1,0);  
                         } 
-                        set(ref(this.db, `players/${this.playerNumber}`), {
+                        set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
                             character: "siamese",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
