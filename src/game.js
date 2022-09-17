@@ -338,6 +338,10 @@ class Game extends Phaser.Scene {
             maxSize: 30,
             runChildUpdate: true
         });
+
+
+        this.physics.add.overlap(this.bullets, this.platforms, f, null, this);
+        
     }
 
     update (){
@@ -404,7 +408,7 @@ class Game extends Phaser.Scene {
         }
 
         // update ur position in firebase
-        if (Math.round(this.player.x) != this.previousX || Math.round(this.player.y) != this.previousY) {
+        if (Math.round(this.player.x) != this.previousX || Math.round(this.player.y) != this.previousY || this.player.anims.currentAnim.key != this.prevAnim) {
             this.uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
             set(this.uref, {
                 id: this.playerNumber,
@@ -412,11 +416,15 @@ class Game extends Phaser.Scene {
                 character: this.playerChar,
                 x: Math.round(this.player.x),
                 y: Math.floor(this.player.y),
-                animation: this.player.anims.currentAnim.key
+                animation: this.player.anims.currentAnim.key,
+                health: this.playerHealth.value
             })
         }
         this.previousX = Math.round(this.player.x);
         this.previousY = Math.round(this.player.y);
+        this.prevAnim = this.player.anims.currentAnim.key;
+
+
     }
 }
 

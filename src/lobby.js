@@ -245,7 +245,8 @@ class Lobby extends Phaser.Scene {
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
                             playerCount: this.playerCount,
-                            animation: 0
+                            animation: 0,
+                            health: 100
                         })
                         if(this.prevSelect && this.prevSelect != "black") {
                             this.portraits[this.prevSelect].destroy();
@@ -271,7 +272,8 @@ class Lobby extends Phaser.Scene {
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
                             playerCount: this.playerCount,
-                            animation: 0
+                            animation: 0,
+                            health: 100
                         })
                         if(this.prevSelect && this.prevSelect != "tabby") {
                             this.portraits[this.prevSelect].destroy();
@@ -296,7 +298,8 @@ class Lobby extends Phaser.Scene {
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
                             playerCount: this.playerCount,
-                            animation: 0
+                            animation: 0,
+                            health: 100
                         })
                         if(this.prevSelect && this.prevSelect != "grey") {
                             this.portraits[this.prevSelect].destroy();
@@ -321,7 +324,8 @@ class Lobby extends Phaser.Scene {
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
                             playerCount: this.playerCount,
-                            animation: 0
+                            animation: 0,
+                            health: 100
                         })
                         if(this.prevSelect && this.prevSelect != "siamese") {
                             this.portraits[this.prevSelect].destroy();
