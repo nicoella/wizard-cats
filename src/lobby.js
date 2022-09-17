@@ -77,6 +77,9 @@ class Lobby extends Phaser.Scene {
                     animation: 0,
                 })
                 
+                set(ref(this.db, `${this.gameCode}/properties`), {
+                    start: false
+                })
                 
             } else {
                 // User is signed out
@@ -108,8 +111,8 @@ class Lobby extends Phaser.Scene {
         this.waiting = this.add.image(770,180,'waiting_text').setOrigin(1,0);
         this.add.image(770,230,'none').setOrigin(1,0);
 
-        this.add.image(250,435,'link_text').setOrigin(0);
-        this.add.text(455,443,`${this.gameCode}`,{fontFamily: 'minecraft '}).setOrigin(0.5);;
+        this.add.image(300,435,'link_text').setOrigin(0);
+        this.add.text(460,443,this.gameCode.charAt(0)+" "+this.gameCode.charAt(1)+" "+this.gameCode.charAt(2)+" "+this.gameCode.charAt(3),{fontFamily: 'minecraft '}).setOrigin(0.5);;
         this.add.image(400,500,'start');
 
         // firebase stuff
@@ -166,6 +169,15 @@ class Lobby extends Phaser.Scene {
                 this.temp.destroy();
             }
         })
+
+        const propertiesRef = ref(this.db, `${this.gameCode}/properties`);
+        onChildChanged(propertiesRef, (snapshot) => {
+            const update = snapshot.val();
+            console.log(update);
+            if(update == true) {
+                this.scene.start("Game", { playerNumber: this.playerNumber});
+            }
+        });
 
         onChildChanged(allPlayersRef, (snapshot) => {
             const player = snapshot.val();
@@ -325,6 +337,9 @@ class Lobby extends Phaser.Scene {
         this.input.on('pointerdown', function(pointer) {
             if(this.game.input.mousePointer.x >= 326 && this.game.input.mousePointer.x <= 474 && this.input.mousePointer.y >= 471 && this.input.mousePointer.y <= 529) {
                 console.log("lobby -> game");
+                set(ref(this.db, `${this.gameCode}/properties`), {
+                    start: true
+                })
                 this.scene.start("Game", { playerNumber: this.playerNumber});
             }
         }, this);
