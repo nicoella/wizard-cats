@@ -33,6 +33,12 @@ class Lobby extends Phaser.Scene {
         this.temp;
     }
 
+    init(data)
+    {
+        console.log('init', data);
+        this.playerNumber = data.playerNumber;
+    }
+
     preload (){
         this.load.image('bg', 'assets/simple_background.png');
         this.load.image('title', 'assets/title.png');
@@ -66,18 +72,18 @@ class Lobby extends Phaser.Scene {
                 var max = 0;
                 get(child(ref(this.db), `players`)).then((data) => {
                     if(this.playerCount==0) {
-                      for(var key in data.val()) {
+                    for(var key in data.val()) {
                         for(var item in data.val()[key]) {
-                          if(item=='playerCount') {
-                            max = Math.max(max, data.val()[key][item]);
-                            console.log(data.val()[key][item]+" "+max);
-                          }
+                            if(item=='playerCount') {
+                                max = Math.max(max, data.val()[key][item]);
+                                console.log(data.val()[key][item]+" "+max);
+                            }
                         }
-                      }
-                      this.playerCount = max%2+1;
-                      update(uref,{playerCount:this.playerCount});
                     }
-                  });
+                    this.playerCount = max%2+1;
+                    update(uref,{playerCount:this.playerCount});
+                    }
+                });
 
                 set(uref, {
                     id: this.playerNumber,

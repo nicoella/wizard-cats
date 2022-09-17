@@ -1,10 +1,92 @@
+import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, signInAnonymously} from 'firebase/auth';
+import { getDatabase, set, ref, onValue, onChildAdded, onDisconnect, remove, update, push } from "firebase/database";
+import { Physics } from "phaser";
+
+const FBconfig = {
+    apiKey: "AIzaSyCICPepb-VHI8gyp7lnExZ7LDXHHBzrC20",
+    authDomain: "wiz-cats.firebaseapp.com",
+    databaseURL: "https://wiz-cats-default-rtdb.firebaseio.com",
+    projectId: "wiz-cats",
+    storageBucket: "wiz-cats.appspot.com",
+    messagingSenderId: "160626562720",
+    appId: "1:160626562720:web:55a12ada7c9952e98e5bc5"
+};
+
+class HealthBar {
+
+    constructor (scene, x, y)
+    {
+        this.bar = new Phaser.GameObjects.Graphics(scene);
+
+        this.x = x;
+        this.y = y;
+        this.value = 100;
+        this.p = 146 / 100;
+
+        this.draw();
+
+        scene.add.existing(this.bar);
+    }
+
+    decrease (amount)
+    {
+        this.value -= amount;
+
+        if (this.value < 0)
+        {
+            this.value = 0;
+        }
+
+        this.draw();
+
+        return (this.value === 0);
+    }
+
+    draw ()
+    {
+        this.bar.clear();
+
+        //  BG
+        this.bar.fillStyle(0x000000);
+        this.bar.fillRect(this.x, this.y, 150, 16);
+
+        //  Health
+
+        this.bar.fillStyle(0xffffff);
+        this.bar.fillRect(this.x + 2, this.y + 2, 146, 12);
+
+        if (this.value < 30)
+        {
+            this.bar.fillStyle(0xff0000);
+        }
+        else
+        {
+            this.bar.fillStyle(0x00ff00);
+        }
+
+        var d = Math.floor(this.p * this.value);
+
+        this.bar.fillRect(this.x + 2, this.y + 2, d, 12);
+    }
+}
+
 class Game extends Phaser.Scene {
     constructor(){
         super({ key: 'Game' });
+        this.firebaseApp = initializeApp(FBconfig);
+        this.db = getDatabase(this.firebaseApp);
+    }
+
+    init(data)
+    {
+        console.log('init', data);
+        this.playerNumber = data.playerNumber;
     }
 
     preload (){
         this.load.image('level', 'assets/level.png');
+        this.load.image('health-bar', 'assets/health-bar.png');
         this.load.image('blackline','assets/blackline.png');
         this.load.image('orb', 'assets/orb.png');
         this.load.image('terrain', 'assets/terrain.png');
@@ -13,6 +95,18 @@ class Game extends Phaser.Scene {
         this.load.image('vines','assets/vines.png');
         this.load.spritesheet('cat-tabby', 
             'assets/cat-tabby.png',
+            { frameWidth: 52, frameHeight: 48 }
+        );
+        this.load.spritesheet('cat-siamese', 
+            'assets/cat-siamese.png',
+            { frameWidth: 52, frameHeight: 48 }
+        );
+        this.load.spritesheet('cat-grey', 
+            'assets/cat-grey.png',
+            { frameWidth: 52, frameHeight: 48 }
+        );
+        this.load.spritesheet('cat-black', 
+            'assets/cat-black.png',
             { frameWidth: 52, frameHeight: 48 }
         );
     }
@@ -29,43 +123,46 @@ class Game extends Phaser.Scene {
         
         this.add.image(400,300,'vines');
         
+        this.playerChar = "cat-grey";
 
-        let playerChar = 'cat-tabby';
-
-        this.player = this.physics.add.sprite(100, 450, playerChar).setDepth(1000);
+        this.player = this.physics.add.sprite(100, 450, this.playerChar).setDepth(1000);
 
         this.player.setBounce(0.2);
         this.player.body.setGravityY(400)
         this.player.setCollideWorldBounds(true);
 
+        this.playerHealth = new HealthBar(this, 100, 100);
+
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers(playerChar, { start: 0, end: 1 }),
+            frames: this.anims.generateFrameNumbers(this.playerChar, { start: 0, end: 1 }),
             frameRate: 5,
             repeat: -1
         });
 
         this.anims.create({
             key: 'leftpause',
-            frames: [ { key: playerChar, frame: 0 } ],
+            frames: [ { key: this.playerChar, frame: 0 } ],
             frameRate: 20
         });
 
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers(playerChar, { start: 2, end: 3 }),
+            frames: this.anims.generateFrameNumbers(this.playerChar, { start: 2, end: 3 }),
             frameRate: 5,
             repeat: -1
         });
 
         this.anims.create({
             key: 'rightpause',
-            frames: [ { key: playerChar, frame: 2 } ],
+            frames: [ { key: this.playerChar, frame: 2 } ],
             frameRate: 20
         });
 
         this.physics.add.collider(this.player, this.platforms);
 
+
+        
         // Bullet Class
         var Bullet = new Phaser.Class({
 
@@ -168,7 +265,7 @@ class Game extends Phaser.Scene {
             this.player.setVelocityY(-500);
         }
 
-        if (pointer.isDown)
+        if (Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)))
         {
             var bullet = this.bullets.get();
             if (bullet)
