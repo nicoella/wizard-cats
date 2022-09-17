@@ -74,6 +74,7 @@ class Game extends Phaser.Scene {
         this.firebaseApp = initializeApp(FBconfig);
         this.db = getDatabase(this.firebaseApp);
         this.playerData = {};
+        this.prevShoot = -100;
     }
 
     init(data)
@@ -298,39 +299,32 @@ class Game extends Phaser.Scene {
             {
                 Phaser.GameObjects.Image.call(this, scene, 0, 0, 'orb');
     
-                this.speed = Phaser.Math.GetSpeed(600, 1);
+                this.speed = Phaser.Math.GetSpeed(500, 1);
+                
             },
     
-            fire: function (x, y, dir)
+            fire: function (x, y, rise, run, platforms, game)
             {
                 this.setPosition(x, y);
 
-                if (dir == 1){
-                    if (this.speed > 0){
-                        this.speed *= -1;
-                    }
-                }
-                else{
-                    if (this.speed < 0){
-                        this.speed *= -1;
-                    }
-                }
-    
+                this.rise = rise/(Math.sqrt(rise*rise+run*run));
+                this.run = run/Math.sqrt(rise*rise+run*run);
+
                 this.setActive(true);
                 this.setVisible(true);
             },
     
             update: function (time, delta)
             {
-                this.x += this.speed * delta;
+                this.x += this.speed * delta * this.run;
+                this.y += this.speed * delta * this.rise;
     
-                if (this.x > 800 || this.x < 0)
+                if (this.x > 800 || this.x < 0 || this.y > 600 || this.y < 0)
                 {
                     this.setActive(false);
                     this.setVisible(false);
                 }
-            }
-    
+            },
         });
     
         this.bullets = this.add.group({
@@ -389,18 +383,18 @@ class Game extends Phaser.Scene {
             this.player.setVelocityY(-500);
         }
 
-        if (Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)))
+        if (pointer.primaryDown)
         {
             var bullet = this.bullets.get();
             if (bullet)
             {
-                if (pointer.worldX > this.player.x){
-                    bullet.fire(this.player.x, this.player.y, 0);
-                }
-                else{
-                    bullet.fire(this.player.x, this.player.y, 1);
+                if(this.prevShoot == -100 || (Date.now() - this.prevShoot)/1000 >= 1) {
+                    bullet.fire(this.player.x, this.player.y, (pointer.worldY - this.player.y)/Math.abs(pointer.worldX - this.player.x), (pointer.worldX - this.player.x)/Math.abs(pointer.worldX - this.player.x), this.platforms, this);
+                    this.prevShoot = Date.now();
                 }
             }
+        } else {
+            this.prevShoot = -100;
         }
 
         // update ur position in firebase
