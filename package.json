@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./node_modules/webpack/bin/webpack.js",
     "build": "node_modules/.bin/webpack",
-    "br": "npm run build && serve dist/ -l 1534"
+    "br": "npm run build && serve dist/ -l 5050"
   },
   "repository": {
     "type": "git",
@@ -21,8 +21,7 @@
   "homepage": "https://github.com/astrocat879/wizard-cats#readme",
   "dependencies": {
     "firebase": "^9.10.0",
-    "phaser": "^3.55.2",
-    "serve": "^14.0.1"
+    "phaser": "^3.55.2"
   },
   "devDependencies": {
     "webpack": "^5.74.0",
