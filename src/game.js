@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInAnonymously} from 'firebase/auth';
-import { getDatabase, set, ref, onValue, onChildAdded, onDisconnect, remove, update, push } from "firebase/database";
-import { Physics } from "phaser";
+import { getDatabase, set, ref, onValue, onChildAdded, onDisconnect, remove, update, push, onChildChanged, get, child, db } from "firebase/database";
+
 
 const FBconfig = {
     apiKey: "AIzaSyCICPepb-VHI8gyp7lnExZ7LDXHHBzrC20",
@@ -82,6 +82,9 @@ class Game extends Phaser.Scene {
     {
         console.log('init', data);
         this.playerNumber = data.playerNumber;
+        this.gameCode = data.gameCode;
+        this.playerChar = data.playerChar;
+        this.playerCount = data.playerCount;
     }
 
     preload (){
@@ -122,8 +125,6 @@ class Game extends Phaser.Scene {
         this.platforms.create(570,318,'platform2');
         
         this.add.image(400,300,'vines');
-        
-        this.playerChar = "cat-grey";
 
         this.player = this.physics.add.sprite(100, 450, this.playerChar).setDepth(1000);
 
@@ -161,6 +162,37 @@ class Game extends Phaser.Scene {
 
         this.physics.add.collider(this.player, this.platforms);
 
+        // FIrebase player stuff
+
+        const allPlayersRef = ref(this.db, `${this.gameCode}/players`);
+        onValue(allPlayersRef, (snapshot) => {  // update location of all the other players
+            this.players = snapshot.val() || {};
+            Object.keys(this.players).forEach(characterKey => {
+                if (characterKey != this.playerNumber){
+                    const updatedPlayer = this.players[characterKey];
+                    const curPlayer = this.playerData[characterKey];
+                    curPlayer.x = updatedPlayer.x;
+                    curPlayer.y = updatedPlayer.y;
+                    curPlayer.body.velocity.x = 0;
+                    curPlayer.body.velocity.y = 0;
+                    curPlayer.anims.play(updatedPlayer.animation, true);
+                }
+            })
+        })
+
+        onChildAdded(allPlayersRef, (snapshot) => { // draw all the other players
+            const addedPlayer = snapshot.val();
+            if (addedPlayer.id != this.playerNumber){
+                var newChar = this.physics.add.sprite(addedPlayer.x, addedPlayer.y, addedPlayer.character);
+                this.physics.add.collider(newChar, this.platforms);
+                this.physics.add.collider(newChar, this.drawnPlatform);
+                this.playerData[addedPlayer.id] = newChar;
+            }
+            // var par = document.getElementById("box");
+            // var bt = document.createElement("button");
+            // bt.textContent = addedPlayer.x;
+            // par.appendChild(bt);
+        })
 
         
         // Bullet Class
@@ -278,6 +310,21 @@ class Game extends Phaser.Scene {
                 }
             }
         }
+
+        // update ur position in firebase
+        if (Math.round(this.player.x) != this.previousX || Math.round(this.player.y) != this.previousY) {
+            this.uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
+            set(this.uref, {
+                id: this.playerNumber,
+                playerCount: this.playerCount,
+                character: this.playerChar,
+                x: Math.round(this.player.x),
+                y: Math.floor(this.player.y),
+                animation: this.player.anims.currentAnim.key
+            })
+        }
+        this.previousX = Math.round(this.player.x);
+        this.previousY = Math.round(this.player.y);
     }
 }
 

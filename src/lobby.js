@@ -228,7 +228,7 @@ class Lobby extends Phaser.Scene {
                             this.add.image(770,230,'black').setOrigin(1,0);  
                         }                  
                         set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
-                            character: "black",
+                            character: "cat-black",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
@@ -254,7 +254,7 @@ class Lobby extends Phaser.Scene {
                             this.add.image(770,230,'tabby').setOrigin(1,0);  
                         } 
                         set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
-                            character: "tabby",
+                            character: "cat-tabby",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
@@ -279,7 +279,7 @@ class Lobby extends Phaser.Scene {
                             this.add.image(770,230,'gray').setOrigin(1,0);  
                         } 
                         set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
-                            character: "gray",
+                            character: "cat-gray",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
@@ -304,7 +304,7 @@ class Lobby extends Phaser.Scene {
                             this.add.image(770,230,'siamese').setOrigin(1,0);  
                         } 
                         set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
-                            character: "siamese",
+                            character: "cat-siamese",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
@@ -325,7 +325,7 @@ class Lobby extends Phaser.Scene {
         this.input.on('pointerdown', function(pointer) {
             if(this.game.input.mousePointer.x >= 326 && this.game.input.mousePointer.x <= 474 && this.input.mousePointer.y >= 471 && this.input.mousePointer.y <= 529) {
                 console.log("lobby -> game");
-                this.scene.start("Game", { playerNumber: this.playerNumber});
+                this.scene.start("Game", { playerNumber: this.playerNumber, playerChar: this.prevSelect, gameCode: this.gameCode, playerCount: this.playerCount});
             }
         }, this);
     }
