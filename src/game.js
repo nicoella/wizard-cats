@@ -78,6 +78,7 @@ class Game extends Phaser.Scene {
         super({ key: 'Game' });
         this.firebaseApp = initializeApp(FBconfig);
         this.db = getDatabase(this.firebaseApp);
+        this.playerData = {};
     }
 
     init(data)
@@ -131,7 +132,7 @@ class Game extends Phaser.Scene {
         this.player = this.physics.add.sprite(100, 450, this.playerChar).setDepth(1000);
 
         this.player.setBounce(0.2);
-        this.player.body.setGravityY(400)
+        this.player.body.setGravityY(300);
         this.player.setCollideWorldBounds(true);
 
         this.playerHealth = new HealthBar(this, 100, 100);

@@ -23,7 +23,7 @@ class Lobby extends Phaser.Scene {
         this.playerData = {};
         this.selected["black"] = false;
         this.selected["tabby"] = false;
-        this.selected["gray"] = false;
+        this.selected["grey"] = false;
         this.selected["siamese"] = false;
         this.portraits = [];
         this.prevSelect;
@@ -56,7 +56,7 @@ class Lobby extends Phaser.Scene {
         this.load.image('link_text','assets/game-link-text.png');
         this.load.image('p-black','assets/portrait-black.png');
         this.load.image('p-tabby','assets/portrait-tabby.png');
-        this.load.image('p-gray','assets/portrait-gray.png');
+        this.load.image('p-grey','assets/portrait-grey.png');
         this.load.image('p-siamese','assets/portrait-siamese.png');
         this.load.image('none','assets/portrait-none.png');
     }
@@ -142,15 +142,15 @@ class Lobby extends Phaser.Scene {
                             if(this.playerCount==2) {
                                 this.add.image(30,230,'p-tabby').setOrigin(0,0);  
                             }
-                        } else if(char=="gray") {
-                            if(!this.portraits["gray"]) this.portraits["gray"] = this.add.image(437,300,'selected');
-                            this.selected["gray"] = true;
+                        } else if(char=="grey") {
+                            if(!this.portraits["grey"]) this.portraits["grey"] = this.add.image(437,300,'selected');
+                            this.selected["grey"] = true;
                             if(this.playerCount==2) {
-                                this.add.image(30,230,'p-gray').setOrigin(0,0);  
+                                this.add.image(30,230,'p-grey').setOrigin(0,0);  
                             }
                         } else if(char=="siamese") {
                             if(!this.portraits["siamese"]) this.portraits["siamese"] = this.add.image(510,300,'selected');
-                            this.seleted["siamese"] = true;
+                            this.selected["siamese"] = true;
                             if(this.playerCount==2) {
                                 this.add.image(30,230,'p-siamese').setOrigin(0,0);  
                             }
@@ -184,7 +184,7 @@ class Lobby extends Phaser.Scene {
             if(player.id != this.playerNumber) {
                 if(player.character) {
                     this.selected["black"] = false;
-                    this.selected["gray"] = false;
+                    this.selected["grey"] = false;
                     this.selected["tabby"] = false;
                     this.selected["siamese"] = false;
                     this.selected[player.character] = true;
@@ -193,8 +193,8 @@ class Lobby extends Phaser.Scene {
                         this.portraits["black"] = this.add.image(291,300,'selected');
                     } else if(player.character=="tabby") {
                         this.portraits["tabby"] = this.add.image(364,300,'selected');
-                    } else if(player.character=="gray") {
-                        this.portraits["gray"] = this.add.image(437,300,'selected');
+                    } else if(player.character=="grey") {
+                        this.portraits["grey"] = this.add.image(437,300,'selected');
                     } else if(player.character=="siamese") {
                         this.portraits["siamese"] = this.add.image(510,300,'selected');
                     }
@@ -204,8 +204,8 @@ class Lobby extends Phaser.Scene {
                         this.add.image(30,230,'p-black').setOrigin(0,0);  
                     } else if(player.character=="tabby") {
                         this.add.image(30,230,'p-tabby').setOrigin(0,0);  
-                    } else if(player.character=="gray") {
-                        this.add.image(30,230,'p-gray').setOrigin(0,0);  
+                    } else if(player.character=="grey") {
+                        this.add.image(30,230,'p-grey').setOrigin(0,0);  
                     } else if(player.character=="siamese") {
                         this.add.image(30,230,'p-siamese').setOrigin(0,0);  
                     }
@@ -214,8 +214,8 @@ class Lobby extends Phaser.Scene {
                         this.add.image(770,230,'p-black').setOrigin(1,0);  
                     } else if(player.character=="tabby") {
                         this.add.image(770,230,'p-tabby').setOrigin(1,0);  
-                    } else if(player.character=="gray") {
-                        this.add.image(770,230,'p-gray').setOrigin(1,0);  
+                    } else if(player.character=="grey") {
+                        this.add.image(770,230,'p-grey').setOrigin(1,0);  
                     } else if(player.character=="siamese") {
                         this.add.image(770,230,'p-siamese').setOrigin(1,0);  
                     }
@@ -223,7 +223,7 @@ class Lobby extends Phaser.Scene {
             }
             if(!this.selected["black"] && this.portraits["black"]) this.portraits["black"].destroy();
             if(!this.selected["tabby"] && this.portraits["tabby"]) this.portraits["tabby"].destroy();
-            if(!this.selected["gray"] && this.portraits["gray"]) this.portraits["gray"].destroy();
+            if(!this.selected["grey"] && this.portraits["grey"]) this.portraits["grey"].destroy();
             if(!this.selected["siamese"] && this.portraits["siamese"]) this.portraits["siamese"].destroy();
             
         })
@@ -282,27 +282,27 @@ class Lobby extends Phaser.Scene {
                     
                     
                 } else if(this.game.input.mousePointer.x >= 403 && this.game.input.mousePointer.x <= 472) {
-                    if(this.prevSelect != "gray" && !this.selected["gray"]) {
-                        this.selected["gray"] = true;
-                        this.portraits["gray"] = this.add.image(437,300,'selected');
+                    if(this.prevSelect != "grey" && !this.selected["grey"]) {
+                        this.selected["grey"] = true;
+                        this.portraits["grey"] = this.add.image(437,300,'selected');
                         if(this.playerCount==1) {
-                            this.add.image(30,230,'p-gray').setOrigin(0,0);  
+                            this.add.image(30,230,'p-grey').setOrigin(0,0);  
                         } else {
-                            this.add.image(770,230,'p-gray').setOrigin(1,0);  
+                            this.add.image(770,230,'p-grey').setOrigin(1,0);  
                         } 
                         set(ref(this.db, `${this.gameCode}/players/${this.playerNumber}`), {
-                            character: "gray",
+                            character: "grey",
                             id: this.playerNumber,
                             x: Math.floor(Math.random() * 100),
                             y: Math.floor(Math.random() * 100),
                             playerCount: this.playerCount,
                             animation: 0
                         })
-                        if(this.prevSelect && this.prevSelect != "gray") {
+                        if(this.prevSelect && this.prevSelect != "grey") {
                             this.portraits[this.prevSelect].destroy();
                             this.selected[this.prevSelect] = false;
                         }
-                        this.prevSelect = "gray";
+                        this.prevSelect = "grey";
                     }
                     
                     
