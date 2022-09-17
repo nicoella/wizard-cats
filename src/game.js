@@ -22,7 +22,7 @@ class HealthBar {
         this.x = x;
         this.y = y;
         this.value = 100;
-        this.p = 146 / 100;
+        this.p = 72 / 100;
 
         this.draw();
 
@@ -46,28 +46,25 @@ class HealthBar {
     draw ()
     {
         this.bar.clear();
-
-        //  BG
-        this.bar.fillStyle(0x000000);
-        this.bar.fillRect(this.x, this.y, 150, 16);
-
         //  Health
 
         this.bar.fillStyle(0xffffff);
-        this.bar.fillRect(this.x + 2, this.y + 2, 146, 12);
+        this.bar.fillRect(this.x, this.y, 72, 7);
 
         if (this.value < 30)
         {
-            this.bar.fillStyle(0xff0000);
+            this.bar.fillStyle(0xf53333);
+        } else if(this.value < 50) {
+            this.bar.fillStyle(0xedad4c);
         }
         else
         {
-            this.bar.fillStyle(0x00ff00);
+            this.bar.fillStyle(0x7eed5f);
         }
 
         var d = Math.floor(this.p * this.value);
 
-        this.bar.fillRect(this.x + 2, this.y + 2, d, 12);
+        this.bar.fillRect(this.x, this.y, d, 7);
     }
 }
 
@@ -97,6 +94,9 @@ class Game extends Phaser.Scene {
         this.load.image('platform1', 'assets/platform1.png');
         this.load.image('platform2', 'assets/platform2.png');
         this.load.image('vines','assets/vines.png');
+        this.load.image('player1_text','assets/player-1-text.png');
+        this.load.image('player2_text','assets/player-2-text.png');
+        this.load.image('health','assets/health-bar.png');
         this.load.spritesheet('tabby', 
             'assets/cat-tabby.png',
             { frameWidth: 52, frameHeight: 48 }
@@ -127,13 +127,18 @@ class Game extends Phaser.Scene {
         
         this.add.image(400,300,'vines');
 
+        this.add.image(30,20,"player1_text").setOrigin(0,0);
+        this.add.image(770,20,"player2_text").setOrigin(1,0);
+        this.add.image(20,100,"health").setOrigin(0,0);
+        this.add.image(780,100,"health").setOrigin(1,0);
+
         this.player = this.physics.add.sprite(100, 450, this.playerChar).setDepth(1000);
 
         this.player.setBounce(0.2);
         this.player.body.setGravityY(300);
         this.player.setCollideWorldBounds(true);
 
-        this.playerHealth = new HealthBar(this, 100, 100);
+        this.playerHealth = new HealthBar(this, 46, 107);
 
         this.anims.create({
             key: 'siamese-left',
@@ -263,8 +268,8 @@ class Game extends Phaser.Scene {
 
         onChildAdded(allPlayersRef, (snapshot) => { // draw all the other players
             const addedPlayer = snapshot.val();
-            if(addedPlayer.playerCount==1) this.add.image(40,40,addedPlayer.character);
-            else this.add.image(770,30,addedPlayer.character);
+            if(addedPlayer.playerCount==1) this.add.image(70,70,addedPlayer.character);
+            else this.add.image(730,70,addedPlayer.character);
             if (addedPlayer.id != this.playerNumber){
                 console.log(addedPlayer.id);
                 var newChar = this.physics.add.sprite(addedPlayer.x, addedPlayer.y, addedPlayer.character);
@@ -272,6 +277,7 @@ class Game extends Phaser.Scene {
                 this.physics.add.collider(newChar, this.drawnPlatform);
                 newChar.setBounce(0.2);
                 newChar.body.setGravityY(300);
+                newChar.playerHealth = new HealthBar(this, 706, 107);
                 this.playerData[addedPlayer.id] = newChar;
             }
             // var par = document.getElementById("box");

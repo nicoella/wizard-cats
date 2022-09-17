@@ -85,7 +85,7 @@ class Lobby extends Phaser.Scene {
                 // User is signed out
                 console.log("nope");
             }
-            onDisconnect(allPlayersRef).remove();
+            onDisconnect(ref(this.db, `${this.gameCode}`)).remove();
         });
         
         signInAnonymously(this.auth)
