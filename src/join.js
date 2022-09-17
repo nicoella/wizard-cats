@@ -25,7 +25,7 @@ class Join extends Phaser.Scene {
                 this.gameCode = document.getElementById("input").value;
                 console.log(this.gameCode);
                 document.getElementById("input").style.display = "none";
-                this.scene.start("Lobby", { gameCode: this.gameCode});
+                this.scene.start("Lobby", { gameCode: this.gameCode, playerCount: 2});
             }
         }, this);
     }

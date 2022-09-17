@@ -32,33 +32,13 @@ class Lobby extends Phaser.Scene {
         this.waiting;
         this.temp;
         this.gameCode = "";
-        this.allPlayersRef = ref(this.db, this.gameCode+'/players');
     }
 
     init(data) {
         console.log('init', data);
         if(this.gameCode == "" && data.gameCode!=undefined) {
             this.gameCode = data.gameCode;
-
-            const uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
-            this.playerCount = 0;
-            this.allPlayersRef = ref(this.db, this.gameCode+'/players');
-
-            var max = 0;
-            get(child(ref(this.db), this.gameCode + `/players`)).then((data) => {
-                if (this.playerCount == 0) {
-                    for (var key in data.val()) {
-                        for (var item in data.val()[key]) {
-                            if (item == 'playerCount') {
-                                max = Math.max(max, data.val()[key][item]);
-                                console.log(data.val()[key][item] + " " + max);
-                            }
-                        }
-                    }
-                    this.playerCount = max % 2 + 1;
-                    update(uref, { playerCount: this.playerCount });
-                }
-            });
+            this.playerCount = data.playerCount;
         }
     }
 
@@ -85,42 +65,10 @@ class Lobby extends Phaser.Scene {
 
     create (){
         onAuthStateChanged(this.auth, (user) => {
-            console.log(this.gameCode);
             if (user != null) {
-                if(this.gameCode == "") {
-                    var i = 0;
-                    var alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-                    while(i<4) {
-                        this.gameCode += alpha.charAt(Math.floor(Math.random() * alpha.length));
-                        i++;
-                    }
-                    console.log(this.gameCode);
-                    this.allPlayersRef = ref(this.db, this.gameCode+'/players');
-
-                    const uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
-                    this.playerCount = 0;
-                    console.log("AHHHH"+this.gameCode);
-                    var max = 0;
-                    get(child(ref(this.db), this.gameCode + `/players`)).then((data) => {
-                        if (this.playerCount == 0) {
-                            for (var key in data.val()) {
-                                for (var item in data.val()[key]) {
-                                    if (item == 'playerCount') {
-                                        max = Math.max(max, data.val()[key][item]);
-                                        console.log(data.val()[key][item] + " " + max);
-                                    }
-                                }
-                            }
-                            this.playerCount = max % 2 + 1;
-                            update(uref, { playerCount: this.playerCount });
-                        }
-                    });
-                }
                 // User is signed in, see docs for a list of available properties
                 // https://firebase.google.com/docs/reference/js/firebase.User
-                // this.uid = user.uid;
                 const uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
-                
 
                 set(uref, {
                     id: this.playerNumber,
@@ -134,7 +82,7 @@ class Lobby extends Phaser.Scene {
                 // User is signed out
                 console.log("nope");
             }
-            onDisconnect(this.allPlayersRef).remove();
+            onDisconnect(allPlayersRef).remove();
         });
         
         signInAnonymously(this.auth)
@@ -166,13 +114,12 @@ class Lobby extends Phaser.Scene {
 
         // firebase stuff
         var thisPlayerRef = ref(this.db, this.gameCode+'/players/' + this.playerNumber);
-        onValue(this.allPlayersRef, (snapshot) => {  // update location of all the other players
+        const allPlayersRef = ref(this.db, this.gameCode+'/players');
+        onValue(allPlayersRef, (snapshot) => {  // update location of all the other players
             this.players = snapshot.val() || {};
-            
         })
 
-        onChildAdded(this.allPlayersRef, (snapshot) => {
-            console.log("what");
+        onChildAdded(allPlayersRef, (snapshot) => {
             const addedPlayer = snapshot.val();            
             get(child(ref(this.db), this.gameCode+`/players`)).then((data) => {
                   for(var key in data.val()) {
@@ -209,10 +156,10 @@ class Lobby extends Phaser.Scene {
                     }
                   }
               });
-            if (this.playerCount == 1) {
+            if (this.playerCount == 1 && addedPlayer.id != this.playerNumber) {
                 this.waiting.destroy();
                 this.add.image(770, 200, 'player2_text').setOrigin(1, 0);
-            } else {
+            } else if(this.playerCount==2) {
                 this.waiting.destroy();
                 this.add.image(705, 200, 'player2_text').setOrigin(1, 0);
                 this.add.image(765, 200, 'you_text').setOrigin(1, 0);
@@ -220,7 +167,7 @@ class Lobby extends Phaser.Scene {
             }
         })
 
-        onChildChanged(this.allPlayersRef, (snapshot) => {
+        onChildChanged(allPlayersRef, (snapshot) => {
             const player = snapshot.val();
             if(player.id != this.playerNumber) {
                 if(player.character) {

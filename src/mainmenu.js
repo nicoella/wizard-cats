@@ -19,7 +19,14 @@ class MainMenu extends Phaser.Scene {
                     console.log("tutorial");
                 } else if(this.game.input.mousePointer.x >= 328 && this.game.input.mousePointer.x <= 474) { //create a new game
                     console.log("create a new game");
-                    this.scene.start('Lobby');
+                    var i = 0;
+                    var alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                    var gameCode = "";
+                    while(i<4) {
+                        gameCode += alpha.charAt(Math.floor(Math.random() * alpha.length));
+                        i++;
+                    }
+                    this.scene.start('Lobby', {gameCode:gameCode, playerCount: 1});
                 } else if(this.game.input.mousePointer.x >= 536 && this.game.input.mousePointer.x <= 682) { //unknown button
                     this.scene.start('Join');
                     console.log("join a game");
