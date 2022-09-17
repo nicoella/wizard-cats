@@ -338,10 +338,8 @@ class Lobby extends Phaser.Scene {
             if(this.game.input.mousePointer.x >= 326 && this.game.input.mousePointer.x <= 474 && this.input.mousePointer.y >= 471 && this.input.mousePointer.y <= 529) {
                 console.log("lobby -> game");
                 set(ref(this.db, `${this.gameCode}/properties`), {
-                    start: true
-                })
-                this.scene.start("Game", { playerNumber: this.playerNumber, playerChar: this.prevSelect, gameCode: this.gameCode, playerCount: this.playerCount});
-                
+                    start: true,
+                })                
             }
         }, this);
     }

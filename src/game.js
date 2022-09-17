@@ -27,8 +27,6 @@ class HealthBar {
         this.draw();
 
         scene.add.existing(this.bar);
-
-        this.playerData;
     }
 
     decrease (amount)
@@ -265,10 +263,15 @@ class Game extends Phaser.Scene {
 
         onChildAdded(allPlayersRef, (snapshot) => { // draw all the other players
             const addedPlayer = snapshot.val();
+            if(addedPlayer.playerCount==1) this.add.image(40,40,addedPlayer.character);
+            else this.add.image(770,30,addedPlayer.character);
             if (addedPlayer.id != this.playerNumber){
+                console.log(addedPlayer.id);
                 var newChar = this.physics.add.sprite(addedPlayer.x, addedPlayer.y, addedPlayer.character);
                 this.physics.add.collider(newChar, this.platforms);
                 this.physics.add.collider(newChar, this.drawnPlatform);
+                newChar.setBounce(0.2);
+                newChar.body.setGravityY(300);
                 this.playerData[addedPlayer.id] = newChar;
             }
             // var par = document.getElementById("box");
