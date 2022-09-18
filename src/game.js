@@ -385,10 +385,22 @@ class Game extends Phaser.Scene {
                         this.player.setVelocityX(-300);
                         this.player.setAcceleration(200);
                         this.windMove = true;
+                        var res = this.playerHealth.decrease(30);
+                        update(this.uref, {health: this.playerHealth.value});
+                        if (res == true){
+                            this.add.image(400,100,'you-lose').setOrigin(0.5).setScale(1.5);
+                            this.scene.pause();
+                        }
                     } else if(wind.direction=="right" && this.player.x>= this.wind.x && this.player.x <= this.wind.x + 150 && Math.abs(this.player.y - wind.y) <= 40) {
                         this.player.setVelocityX(300);
                         this.player.setAcceleration(-200);
                         this.windMove = true;
+                        var res = this.playerHealth.decrease(30);
+                        update(this.uref, {health: this.playerHealth.value});
+                        if (res == true){
+                            this.add.image(400,100,'you-lose').setOrigin(0.5).setScale(1.5);
+                            this.scene.pause();
+                        }
                     }
             }
             
