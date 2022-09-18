@@ -74,7 +74,6 @@ class Game extends Phaser.Scene {
         this.firebaseApp = initializeApp(FBconfig);
         this.db = getDatabase(this.firebaseApp);
         this.playerData = {};
-        this.playerData = [];
         this.prevShoot = -100;
         this.bulletImgs = {};
         this.otherPlayer;
@@ -147,7 +146,13 @@ class Game extends Phaser.Scene {
         this.player.body.setGravityY(700);
         this.player.setCollideWorldBounds(true);
 
-        this.playerHealth = new HealthBar(this, 46, 107);
+        if (this.playerCount == 1){
+            this.playerHealth = new HealthBar(this, 46, 107);
+        }
+        else{
+            this.playerHealth = new HealthBar(this, 706, 107);
+        }
+        
 
         this.anims.create({
             key: 'siamese-left',
@@ -260,10 +265,43 @@ class Game extends Phaser.Scene {
         // FIrebase player stuff
 
         const allPlayersRef = ref(this.db, `${this.gameCode}/players`);
+
+        onChildAdded(allPlayersRef, (snapshot) => { // draw all the other players
+            const addedPlayer = snapshot.val();
+            if(addedPlayer.playerCount==1) this.add.image(70,70,addedPlayer.character);
+            else this.add.image(730,70,addedPlayer.character);
+            if (addedPlayer.id != this.playerNumber){
+                console.log("ON CHILD ADDED");
+                console.log(addedPlayer.id);
+                var newChar = this.physics.add.sprite(addedPlayer.x, addedPlayer.y, addedPlayer.character);
+                this.physics.add.collider(newChar, this.platforms);
+                this.physics.add.collider(newChar, this.drawnPlatform);
+                newChar.setBounce(0.2);
+                newChar.body.setGravityY(700);
+                if (this.playerCount == 1){
+                    newChar.otherplayerHealth = new HealthBar(this, 706, 107);
+                }
+                else{
+                    newChar.otherplayerHealth = new HealthBar(this, 46, 107);
+                }
+                // newChar.otherplayerHealth = new HealthBar(this, 706, 107);
+                newChar.id = addedPlayer.id;
+                newChar.x = addedPlayer.x;
+                newChar.y = addedPlayer.y;
+                this.playerData[addedPlayer.id] = newChar;
+                this.otherPlayer = addedPlayer.id;
+            }
+            // var par = document.getElementById("box");
+            // var bt = document.createElement("button");
+            // bt.textContent = addedPlayer.x;
+            // par.appendChild(bt);
+        });
+
         onValue(allPlayersRef, (snapshot) => {  // update location of all the other players
             this.players = snapshot.val() || {};
             Object.keys(this.players).forEach(characterKey => {
                 if (characterKey != this.playerNumber){
+                    console.log("ON VALUE");
                     const updatedPlayer = this.players[characterKey];
                     const curPlayer = this.playerData[characterKey];
                     curPlayer.x = updatedPlayer.x;
@@ -272,10 +310,17 @@ class Game extends Phaser.Scene {
                     curPlayer.body.velocity.y = 0;
                     curPlayer.x = updatedPlayer.x;
                     curPlayer.y = updatedPlayer.y;
+                    curPlayer.otherplayerHealth.value = updatedPlayer.health;
+                    curPlayer.otherplayerHealth.draw();
                     curPlayer.anims.play(updatedPlayer.animation, true);
+
+                    if (curPlayer.otherplayerHealth.value === 0){
+                        this.add.text(400,200,"you win!",{fontFamily: 'minecraft '}).setOrigin(0.5);
+                        this.scene.pause();
+                    }
                 }
             })
-        })
+        });
 
         onChildChanged(ref(this.db, `${this.gameCode}/bullets`), (snapshot) => {
             const bullet = snapshot.val();
@@ -289,6 +334,10 @@ class Game extends Phaser.Scene {
                         console.log(bullet.id);
                         console.log(this.gameCode);
 
+                        var res = this.playerHealth.decrease(10);
+
+                        // console.log("healhtvalue : "+ this.otherplayerNumber + " "+ this.playerData[this.otherPlayer].otherplayerHealth.value);
+
                         set(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${bullet.id}`), {
                             x: bullet.x,
                             y: bullet.y,
@@ -296,34 +345,16 @@ class Game extends Phaser.Scene {
                             status: false,
                             owner:bullet.owner
                         });
+                        update(this.uref, {health: this.playerHealth.value});
+
+                        if (res == true){
+                            this.add.text(400,200,"you lose",{fontFamily: 'minecraft '}).setOrigin(0.5);
+                            this.scene.pause();
+                        }
                     }
                 }
             }
-        })
-
-        onChildAdded(allPlayersRef, (snapshot) => { // draw all the other players
-            const addedPlayer = snapshot.val();
-            if(addedPlayer.playerCount==1) this.add.image(70,70,addedPlayer.character);
-            else this.add.image(730,70,addedPlayer.character);
-            if (addedPlayer.id != this.playerNumber){
-                console.log(addedPlayer.id);
-                var newChar = this.physics.add.sprite(addedPlayer.x, addedPlayer.y, addedPlayer.character);
-                this.physics.add.collider(newChar, this.platforms);
-                this.physics.add.collider(newChar, this.drawnPlatform);
-                newChar.setBounce(0.2);
-                newChar.body.setGravityY(700);
-                newChar.playerHealth = new HealthBar(this, 706, 107);
-                newChar.id = addedPlayer.id;
-                newChar.x = addedPlayer.x;
-                newChar.y = addedPlayer.y;
-                this.playerData[addedPlayer.id] = newChar;
-                this.otherPlayer = addedPlayer.id;
-            }
-            // var par = document.getElementById("box");
-            // var bt = document.createElement("button");
-            // bt.textContent = addedPlayer.x;
-            // par.appendChild(bt);
-        })
+        });
      
         // Bullet Class
         var Bullet = new Phaser.Class({
@@ -370,7 +401,7 @@ class Game extends Phaser.Scene {
                         if(key=='status') status = data.val()[key];
                     }
                 });
-                console.log(status);
+                // console.log(status);
                 if(this.gameCode && status) {
                     set(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${this.id}`), {
                         x: this.x,
@@ -398,7 +429,7 @@ class Game extends Phaser.Scene {
             //if(a.id) this.firebaseApp.database().ref(`${this.gameCode}/bullets/${a.id}`).remove();
             //console.log(a.id);
             //if(a.id) (ref(this.db,`${this.gameCode}/bullets/${a.id}`)).remove();
-            console.log(this.players[this.otherPlayer]+" "+this.otherPlayer+" "+this.players[this.otherPlayer].id);
+            // console.log(this.players[this.otherPlayer]+" "+this.otherPlayer+" "+this.players[this.otherPlayer].id);
         }
 /*
         function g(a, b) {
@@ -408,11 +439,20 @@ class Game extends Phaser.Scene {
             var otherHealth = this.playerData[this.otherPlayer].health - 5;
             update(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/players/${this.otherPlayer}`), { health: otherHealth });
         }*/
+
+        function g (a, b) {
+            a.setActive(false);
+            a.setVisible(false);
+        }
+
         this.physics.add.overlap(this.bullets, this.platforms, f, null, this);
         //this.physics.add.overlap(this.bullets, this.players[this.otherPlayer], g, null, this);
 
         this.physics.add.collider(this.bullets, this.platforms);
         //this.physics.add.collider(this.bullets, this.players[this.otherPlayer]);
+
+        this.physics.add.overlap(this.bullets, this.playerData[this.otherPlayer], g, null, this);
+        this.physics.add.collider(this.bullets, this.playerData[this.otherPlayer]);
     }
 
     update (){
@@ -482,14 +522,13 @@ class Game extends Phaser.Scene {
         // update ur position in firebase
         if (Math.round(this.player.x) != this.previousX || Math.round(this.player.y) != this.previousY || this.player.anims.currentAnim.key != this.prevAnim) {
             this.uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
-            set(this.uref, {
+            update(this.uref, {
                 id: this.playerNumber,
                 playerCount: this.playerCount,
                 character: this.playerChar,
                 x: Math.round(this.player.x),
                 y: Math.floor(this.player.y),
                 animation: this.player.anims.currentAnim.key,
-                health: this.playerHealth.value
             })
         }
         this.previousX = Math.round(this.player.x);
