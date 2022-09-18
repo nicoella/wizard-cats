@@ -313,7 +313,7 @@ class Game extends Phaser.Scene {
                 this.physics.add.collider(newChar, this.platforms);
                 this.physics.add.collider(newChar, this.drawnPlatform);
                 newChar.setBounce(0.2);
-                newChar.body.setGravityY(700);
+                // newChar.body.setGravityY(700);
                 if (this.playerCount == 1){
                     newChar.otherplayerHealth = new HealthBar(this, 706, 107);
                 }
@@ -337,7 +337,7 @@ class Game extends Phaser.Scene {
             this.players = snapshot.val() || {};
             Object.keys(this.players).forEach(characterKey => {
                 if (characterKey != this.playerNumber){
-                    console.log("ON VALUE");
+                    // console.log("ON VALUE");
                     const updatedPlayer = this.players[characterKey];
                     const curPlayer = this.playerData[characterKey];
                     curPlayer.x = updatedPlayer.x;
@@ -367,6 +367,34 @@ class Game extends Phaser.Scene {
                 this.windMove = false;
             }
         });
+
+        onChildAdded(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
+            this.grav = snapshot.val();
+            console.log(this.globals);
+            this.player.body.setGravityY(this.grav);
+
+        });
+
+        onChildChanged(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
+            this.grav = snapshot.val();
+            console.log(this.globals);
+            this.player.body.setGravityY(this.grav);
+
+        });
+
+        // onValue(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
+        //     this.grav = snapshot.val();
+        //     if (this.grav !=)
+        //     console.log(this.globals);
+        //     this.player.body.setGravityY(this.grav);
+
+        // });
+
+        // onValue(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
+        //     this.grav = snapshot.val();
+        //     console.log(this.globals);
+        //     this.player.body.setGravityY(this.grav);
+        // });
 
         onChildAdded(ref(this.db,`${this.gameCode}/spells/wind/`), (snapshot) => {
             const wind = snapshot.val();
@@ -643,7 +671,21 @@ class Game extends Phaser.Scene {
                     y: this.player.y,
                     owner: this.playerNumber
                 })
-            } else {
+            }
+            else if (res=="gravup"){
+                set(ref(this.db,`${this.gameCode}/globals`),{
+                    gravity:300
+                });
+                this.player.body.setGravityY(300);
+                // this.playerData[this.otherPlayer].body.setGravityY(300);
+            } 
+            else if (res=="gravdown"){
+                set(ref(this.db,`${this.gameCode}/globals`),{
+                    gravity:700
+                });
+                this.player.body.setGravityY(700);
+            }
+            else {
 
             }
             this.drawnPoints = [];
@@ -686,6 +728,36 @@ class Game extends Phaser.Scene {
         wind[11] = [9,4.3];
         wind[12] = [7,7];
 
+        var gravityUp = {};
+        gravityUp[0] = [];
+        gravityUp[1] = [11];
+        gravityUp[2] = [10];
+        gravityUp[3] = [9];
+        gravityUp[4] = [8];
+        gravityUp[5] = [7];
+        gravityUp[6] = [6];
+        gravityUp[7] = [7];
+        gravityUp[8] = [8];
+        gravityUp[9] = [9];
+        gravityUp[10] = [10];
+        gravityUp[11] = [11];
+        gravityUp[12] = [];
+
+        var gravityDown = {};
+        gravityDown[0] = [];
+        gravityDown[1] = [6];
+        gravityDown[2] = [7];
+        gravityDown[3] = [8];
+        gravityDown[4] = [9];
+        gravityDown[5] = [10];
+        gravityDown[6] = [11];
+        gravityDown[7] = [10];
+        gravityDown[8] = [9];
+        gravityDown[9] = [8];
+        gravityDown[10] = [7];
+        gravityDown[11] = [6];
+        gravityDown[12] = [];
+
         var rock = {};
         var fireball = {};
 
@@ -693,6 +765,7 @@ class Game extends Phaser.Scene {
         var xmax = this.maxX(points);
         var ymin = this.minY(points);
         var ymax = this.maxY(points);
+        console.log(xmin+" "+xmax+" "+ymin+" "+ymax);
         if(ymax-ymin > xmax-xmin) {
             var diff = (ymax-ymin) - (xmax-xmin);
             xmin -= diff;
@@ -703,6 +776,8 @@ class Game extends Phaser.Scene {
         
         var width = (xmax - xmin);
         var ratio = width/12;
+
+        var windHuh = true;
         for(var i in points) {
             var p = points[i];
             p["x"] = (p["x"] - xmin) / ratio;
@@ -717,7 +792,7 @@ class Game extends Phaser.Scene {
                 }
             }
             if(minD >= 3) {
-                return "none";
+                windHuh = false;
             }
         }
         for(var i=0; i<=12; i++) {
@@ -728,11 +803,75 @@ class Game extends Phaser.Scene {
                     var d = (this.dist(i,wind[i][j],p["x"],p["y"]));
                     if(d<minD) minD = d;
                 }
-                if(minD >= 3) return "none";
+                if(minD >= 3) windHuh = false;
             }
         }
         
-        return "wind";
+        if (windHuh) return "wind";
+
+        var gravUpHuh = true;
+        for(var i in points) {
+            var p = points[i];
+            var minD = 100;
+            console.log(p["x"]+" "+p["y"]);
+            for(var i=0; i<=12; i++) {
+                for(var j in gravityUp[i]) {
+                    var d = (this.dist(i,gravityUp[i][j],p["x"],p["y"]));
+                    if(d<minD) {
+                        minD = d;
+                    }
+                }
+            }
+            if(minD >= 4) {
+                gravUpHuh = false;
+            }
+        }
+        for(var i=0; i<=12; i++) {
+            for(var j in gravityUp[i]) {
+                var minD = 100;
+                for(var k in points) {
+                    var p = points[k];
+                    var d = (this.dist(i,gravityUp[i][j],p["x"],p["y"]));
+                    if(d<minD) minD = d;
+                }
+                if(minD >= 4) gravUpHuh = false;
+            }
+        }
+        
+        if (gravUpHuh) return "gravup";
+
+        var gravDownHuh = true;
+        for(var i in points) {
+            var p = points[i];
+            var minD = 100;
+            console.log(p["x"]+" "+p["y"]);
+            for(var i=0; i<=12; i++) {
+                for(var j in gravityDown[i]) {
+                    var d = (this.dist(i,gravityDown[i][j],p["x"],p["y"]));
+                    if(d<minD) {
+                        minD = d;
+                    }
+                }
+            }
+            if(minD >= 4) {
+                gravDownHuh = false;
+            }
+        }
+        for(var i=0; i<=12; i++) {
+            for(var j in gravityDown[i]) {
+                var minD = 100;
+                for(var k in points) {
+                    var p = points[k];
+                    var d = (this.dist(i,gravityDown[i][j],p["x"],p["y"]));
+                    if(d<minD) minD = d;
+                }
+                if(minD >= 4) gravDownHuh = false;
+            }
+        }
+        
+        if (gravDownHuh) return "gravdown";
+
+        return "none";
     }
 
     dist(x1,y1,x2,y2) {

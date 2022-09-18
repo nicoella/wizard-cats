@@ -80,7 +80,11 @@ class Lobby extends Phaser.Scene {
                 
                 set(ref(this.db, `${this.gameCode}/properties`), {
                     start: false
-                })
+                });
+
+                // set(ref(this.db, `${this.gameCode}/globals`), {
+                //     gravity: 700
+                // })
                 
             } else {
                 // User is signed out
