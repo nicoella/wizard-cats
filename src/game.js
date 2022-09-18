@@ -310,6 +310,12 @@ class Game extends Phaser.Scene {
             })
         })
 
+        onValue(ref(this.db, `${this.gameCode}/gravity/`), (snapshot) => {
+            this.grav = snapshot.val();
+            this.player.body.setGravityY(this.grav.gravity);
+            this.playerData[this.otherPlayer].body.setGravityY(this.grav.gravity);
+        });
+
         onChildAdded(ref(this.db,`${this.gameCode}/spells/wind/`), (snapshot) => {
             const wind = snapshot.val();
             if(wind.direction=="right")this.wind = this.physics.add.sprite(this.player.x+65,this.player.y+6,"wind-"+wind.direction).setDepth(1000);
@@ -559,7 +565,15 @@ class Game extends Phaser.Scene {
                     id:id,
                     direction: dir,
                 })
-            } else {
+            }
+            else if (res=="gravup"){
+                set(ref(this.db,`${this.gameCode}/globals`),{
+                    gravity:300
+                });
+                this.player.body.setGravityY(this.grav.gravity);
+                this.playerData[this.otherPlayer].body.setGravityY(this.grav.gravity);
+            } 
+            else {
 
             }
             this.drawnPoints = [];
@@ -603,6 +617,21 @@ class Game extends Phaser.Scene {
         wind[11] = [9,4.3];
         wind[12] = [7,7];
 
+        var gravityUp = {};
+        gravityUp[0] = [];
+        gravityUp[1] = [1];
+        gravityUp[2] = [2];
+        gravityUp[3] = [3];
+        gravityUp[4] = [4];
+        gravityUp[5] = [5];
+        gravityUp[6] = [6];
+        gravityUp[7] = [7];
+        gravityUp[8] = [8];
+        gravityUp[9] = [9];
+        gravityUp[10] = [10];
+        gravityUp[11] = [11];
+        gravityUp[12] = [];
+
         var rock = {};
         var fireball = {};
 
@@ -620,6 +649,8 @@ class Game extends Phaser.Scene {
         
         var width = (xmax - xmin);
         var ratio = width/12;
+
+        var windHuh = true;
         for(var i in points) {
             var p = points[i];
             p["x"] = (p["x"] - xmin) / ratio;
@@ -635,7 +666,7 @@ class Game extends Phaser.Scene {
                 }
             }
             if(minD >= 3) {
-                return "none";
+                windHuh = false;
             }
         }
         for(var i=0; i<=12; i++) {
@@ -646,11 +677,46 @@ class Game extends Phaser.Scene {
                     var d = (this.dist(i,wind[i][j],p["x"],p["y"]));
                     if(d<minD) minD = d;
                 }
-                if(minD >= 3) return "none";
+                if(minD >= 3) windHuh = false;
             }
         }
         
-        return "wind";
+        if (windHuh) return "wind";
+
+        var gravUpHuh = true;
+        for(var i in points) {
+            var p = points[i];
+            p["x"] = (p["x"] - xmin) / ratio;
+            p["y"] = (p["y"] - ymin) / ratio;
+            var minD = 100;
+            console.log(p["x"]+" "+p["y"]);
+            for(var i=0; i<=12; i++) {
+                for(var j in gravityUp[i]) {
+                    var d = (this.dist(i,gravityUp[i][j],p["x"],p["y"]));
+                    if(d<minD) {
+                        minD = d;
+                    }
+                }
+            }
+            if(minD >= 4) {
+                gravUpHuh = false;
+            }
+        }
+        for(var i=0; i<=12; i++) {
+            for(var j in gravityUp[i]) {
+                var minD = 100;
+                for(var k in points) {
+                    var p = points[k];
+                    var d = (this.dist(i,gravityUp[i][j],p["x"],p["y"]));
+                    if(d<minD) minD = d;
+                }
+                if(minD >= 4) gravUpHuh = false;
+            }
+        }
+        
+        if (gravUpHuh) return "gravup";
+
+        return "none";
     }
 
     dist(x1,y1,x2,y2) {
