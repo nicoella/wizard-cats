@@ -293,6 +293,31 @@ class Game extends Phaser.Scene {
         // FIrebase player stuff
 
         const allPlayersRef = ref(this.db, `${this.gameCode}/players`);
+
+        onChildAdded(allPlayersRef, (snapshot) => { // draw all the other players
+            const addedPlayer = snapshot.val();
+            if(addedPlayer.playerCount==1) this.add.image(70,70,addedPlayer.character);
+            else this.add.image(730,70,addedPlayer.character);
+            if (addedPlayer.id != this.playerNumber){
+                console.log(addedPlayer.id);
+                var newChar = this.physics.add.sprite(addedPlayer.x, addedPlayer.y, addedPlayer.character);
+                this.physics.add.collider(newChar, this.platforms);
+                this.physics.add.collider(newChar, this.drawnPlatform);
+                newChar.setBounce(0.2);
+                // newChar.body.setGravityY(700);
+                newChar.playerHealth = new HealthBar(this, 706, 107);
+                newChar.id = addedPlayer.id;
+                newChar.x = addedPlayer.x;
+                newChar.y = addedPlayer.y;
+                this.playerData[addedPlayer.id] = newChar;
+                this.otherPlayer = addedPlayer.id;
+            }
+            // var par = document.getElementById("box");
+            // var bt = document.createElement("button");
+            // bt.textContent = addedPlayer.x;
+            // par.appendChild(bt);
+        });
+
         onValue(allPlayersRef, (snapshot) => {  // update location of all the other players
             this.players = snapshot.val() || {};
             Object.keys(this.players).forEach(characterKey => {
@@ -310,11 +335,18 @@ class Game extends Phaser.Scene {
             })
         })
 
-        onValue(ref(this.db, `${this.gameCode}/gravity/`), (snapshot) => {
+        onChildAdded(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
             this.grav = snapshot.val();
-            this.player.body.setGravityY(this.grav.gravity);
-            this.playerData[this.otherPlayer].body.setGravityY(this.grav.gravity);
+            console.log(this.globals);
+            this.player.body.setGravityY(this.grav);
+
         });
+
+        // onValue(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
+        //     this.grav = snapshot.val();
+        //     console.log(this.globals);
+        //     this.player.body.setGravityY(this.grav);
+        // });
 
         onChildAdded(ref(this.db,`${this.gameCode}/spells/wind/`), (snapshot) => {
             const wind = snapshot.val();
@@ -352,29 +384,7 @@ class Game extends Phaser.Scene {
             }
         })
 
-        onChildAdded(allPlayersRef, (snapshot) => { // draw all the other players
-            const addedPlayer = snapshot.val();
-            if(addedPlayer.playerCount==1) this.add.image(70,70,addedPlayer.character);
-            else this.add.image(730,70,addedPlayer.character);
-            if (addedPlayer.id != this.playerNumber){
-                console.log(addedPlayer.id);
-                var newChar = this.physics.add.sprite(addedPlayer.x, addedPlayer.y, addedPlayer.character);
-                this.physics.add.collider(newChar, this.platforms);
-                this.physics.add.collider(newChar, this.drawnPlatform);
-                newChar.setBounce(0.2);
-                newChar.body.setGravityY(700);
-                newChar.playerHealth = new HealthBar(this, 706, 107);
-                newChar.id = addedPlayer.id;
-                newChar.x = addedPlayer.x;
-                newChar.y = addedPlayer.y;
-                this.playerData[addedPlayer.id] = newChar;
-                this.otherPlayer = addedPlayer.id;
-            }
-            // var par = document.getElementById("box");
-            // var bt = document.createElement("button");
-            // bt.textContent = addedPlayer.x;
-            // par.appendChild(bt);
-        })
+        
      
         // Bullet Class
         var Bullet = new Phaser.Class({
@@ -570,8 +580,8 @@ class Game extends Phaser.Scene {
                 set(ref(this.db,`${this.gameCode}/globals`),{
                     gravity:300
                 });
-                this.player.body.setGravityY(this.grav.gravity);
-                this.playerData[this.otherPlayer].body.setGravityY(this.grav.gravity);
+                this.player.body.setGravityY(300);
+                // this.playerData[this.otherPlayer].body.setGravityY(300);
             } 
             else {
 
