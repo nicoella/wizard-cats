@@ -74,7 +74,6 @@ class Game extends Phaser.Scene {
         this.firebaseApp = initializeApp(FBconfig);
         this.db = getDatabase(this.firebaseApp);
         this.playerData = {};
-        this.playerData = [];
         this.prevShoot = -100;
         this.bulletImgs = {};
         this.character;
@@ -84,6 +83,7 @@ class Game extends Phaser.Scene {
         this.prevY = -1;
         this.drawnPoints = [];
         this.wind;
+        this.windMove;
     }
 
     init(data)
@@ -120,6 +120,8 @@ class Game extends Phaser.Scene {
             'assets/wind-right.png',
             { frameWidth: 68, frameHeight: 36 }
         );
+        this.load.image('you-win','assets/you-win.png');
+        this.load.image('you-lose','assets/you-lose.png');
         this.load.spritesheet('tabby', 
             'assets/cat-tabby.png',
             { frameWidth: 52, frameHeight: 48 }
@@ -166,18 +168,24 @@ class Game extends Phaser.Scene {
         this.player.body.setGravityY(700);
         this.player.setCollideWorldBounds(true);
 
-        this.playerHealth = new HealthBar(this, 46, 107);
+        if (this.playerCount == 1){
+            this.playerHealth = new HealthBar(this, 46, 107);
+        }
+        else{
+            this.playerHealth = new HealthBar(this, 706, 107);
+        }
+        
 
         this.anims.create({
             key: 'wind-left',
-            frames: this.anims.generateFrameNumbers("wind-left", { start: 0, end: 6}),
+            frames: this.anims.generateFrameNumbers("wind-left", { start: 0, end: 7}),
             frameRate: 10,
             repeat: -1
         })
 
         this.anims.create({
             key: 'wind-right',
-            frames: this.anims.generateFrameNumbers("wind-right", { start: 0, end: 6}),
+            frames: this.anims.generateFrameNumbers("wind-right", { start: 0, end: 7}),
             frameRate: 10,
             repeat: -1
         })
@@ -299,13 +307,20 @@ class Game extends Phaser.Scene {
             if(addedPlayer.playerCount==1) this.add.image(70,70,addedPlayer.character);
             else this.add.image(730,70,addedPlayer.character);
             if (addedPlayer.id != this.playerNumber){
+                console.log("ON CHILD ADDED");
                 console.log(addedPlayer.id);
                 var newChar = this.physics.add.sprite(addedPlayer.x, addedPlayer.y, addedPlayer.character);
                 this.physics.add.collider(newChar, this.platforms);
                 this.physics.add.collider(newChar, this.drawnPlatform);
                 newChar.setBounce(0.2);
                 // newChar.body.setGravityY(700);
-                newChar.playerHealth = new HealthBar(this, 706, 107);
+                if (this.playerCount == 1){
+                    newChar.otherplayerHealth = new HealthBar(this, 706, 107);
+                }
+                else{
+                    newChar.otherplayerHealth = new HealthBar(this, 46, 107);
+                }
+                // newChar.otherplayerHealth = new HealthBar(this, 706, 107);
                 newChar.id = addedPlayer.id;
                 newChar.x = addedPlayer.x;
                 newChar.y = addedPlayer.y;
@@ -322,6 +337,7 @@ class Game extends Phaser.Scene {
             this.players = snapshot.val() || {};
             Object.keys(this.players).forEach(characterKey => {
                 if (characterKey != this.playerNumber){
+                    console.log("ON VALUE");
                     const updatedPlayer = this.players[characterKey];
                     const curPlayer = this.playerData[characterKey];
                     curPlayer.x = updatedPlayer.x;
@@ -330,10 +346,27 @@ class Game extends Phaser.Scene {
                     curPlayer.body.velocity.y = 0;
                     curPlayer.x = updatedPlayer.x;
                     curPlayer.y = updatedPlayer.y;
+                    curPlayer.otherplayerHealth.value = updatedPlayer.health;
+                    curPlayer.otherplayerHealth.draw();
                     curPlayer.anims.play(updatedPlayer.animation, true);
+
+                    if (curPlayer.otherplayerHealth.value === 0){
+                        this.add.image(400,100,'you-win').setOrigin(0.5).setScale(1.5);
+                        this.scene.pause();
+                    }
                 }
             })
-        })
+        });
+
+        onChildChanged(ref(this.db,`${this.gameCode}/players`), (snapshot) => {
+            const player = snapshot.val();
+            console.log(this.player.body.velocity.x);
+            if((Math.abs(this.player.body.velocity.x)<=30 || this.player.x >= 765 || this.player.x <= 40) && this.windMove) {
+                this.player.setVelocityX(0);
+                this.player.setAcceleration(0);
+                this.windMove = false;
+            }
+        });
 
         onChildAdded(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
             this.grav = snapshot.val();
@@ -350,27 +383,58 @@ class Game extends Phaser.Scene {
 
         onChildAdded(ref(this.db,`${this.gameCode}/spells/wind/`), (snapshot) => {
             const wind = snapshot.val();
-            if(wind.direction=="right")this.wind = this.physics.add.sprite(this.player.x+65,this.player.y+6,"wind-"+wind.direction).setDepth(1000);
-            else this.wind = this.physics.add.sprite(this.player.x-95,this.player.y+6,"wind-"+wind.direction).setDepth(1000);
+            console.log("child added");
+            if(wind.direction=="right")this.wind = this.physics.add.sprite(wind.x+65,wind.y+6,"wind-"+wind.direction).setDepth(1000);
+            else this.wind = this.physics.add.sprite(wind.x-95,wind.y+6,"wind-"+wind.direction).setDepth(1000);
             
             this.wind.anims.play('wind-'+wind.direction, 10, false);
             this.wind.anims.stopAfterRepeat(0);
-            this.wind.once('animationcomplete', (box)=>{
-                this.wind.destroy()
-              })
+            this.wind.once('animationcomplete', ()=>{
+                this.destroy();
+            });
+
+            if(wind.owner!=this.playerNumber) {
+                    if(wind.direction=="left" && this.player.x <= this.wind.x+20 && this.player.x >= this.wind.x-130 && Math.abs(this.player.y - wind.y) <= 40) {
+                        this.player.setVelocityX(-300);
+                        this.player.setAcceleration(200);
+                        this.windMove = true;
+                        var res = this.playerHealth.decrease(30);
+                        update(this.uref, {health: this.playerHealth.value});
+                        if (res == true){
+                            this.add.image(400,100,'you-lose').setOrigin(0.5).setScale(1.5);
+                            this.scene.pause();
+                        }
+                    } else if(wind.direction=="right" && this.player.x>= this.wind.x && this.player.x <= this.wind.x + 150 && Math.abs(this.player.y - wind.y) <= 40) {
+                        this.player.setVelocityX(300);
+                        this.player.setAcceleration(-200);
+                        this.windMove = true;
+                        var res = this.playerHealth.decrease(30);
+                        update(this.uref, {health: this.playerHealth.value});
+                        if (res == true){
+                            this.add.image(400,100,'you-lose').setOrigin(0.5).setScale(1.5);
+                            this.scene.pause();
+                        }
+                    }
+            }
+            
         })
 
         onChildChanged(ref(this.db, `${this.gameCode}/bullets`), (snapshot) => {
             const bullet = snapshot.val();
-            if(bullet.owner != this.playerNumber) {
+            if(bullet.owner != this.playerNumber) { 
                 if(this.bulletImgs[bullet.id]) this.bulletImgs[bullet.id].destroy();
                 if(bullet.status) {
                     this.bulletImgs[bullet.id] = this.add.image(bullet.x,bullet.y,'orb');
                     //console.log(bullet.x+" "+bullet.y+" "+this.player.x+" "+this.player.y)
                     if(bullet.x >= this.player.x - 12 && bullet.x <= this.player.x + 12 && bullet.y >= this.player.y - 12 && bullet.y <= this.player.y + 12) {
+                        
                         console.log("collision");
                         console.log(bullet.id);
                         console.log(this.gameCode);
+
+                        var res = this.playerHealth.decrease(10);
+
+                        // console.log("healhtvalue : "+ this.otherplayerNumber + " "+ this.playerData[this.otherPlayer].otherplayerHealth.value);
 
                         set(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${bullet.id}`), {
                             x: bullet.x,
@@ -379,12 +443,16 @@ class Game extends Phaser.Scene {
                             status: false,
                             owner:bullet.owner
                         });
+                        update(this.uref, {health: this.playerHealth.value});
+
+                        if (res == true){
+                            this.add.image(400,100,'you-lose').setOrigin(0.5).setScale(1.5);
+                            this.scene.pause();
+                        }
                     }
                 }
             }
-        })
-
-        
+        });
      
         // Bullet Class
         var Bullet = new Phaser.Class({
@@ -431,6 +499,7 @@ class Game extends Phaser.Scene {
                         if(key=='status') status = data.val()[key];
                     }
                 });
+                // console.log(status);
                 if(this.gameCode && status) {
                     set(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${this.id}`), {
                         x: this.x,
@@ -468,11 +537,20 @@ class Game extends Phaser.Scene {
             var otherHealth = this.playerData[this.otherPlayer].health - 5;
             update(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/players/${this.otherPlayer}`), { health: otherHealth });
         }*/
+
+        function g (a, b) {
+            a.setActive(false);
+            a.setVisible(false);
+        }
+
         this.physics.add.overlap(this.bullets, this.platforms, f, null, this);
         //this.physics.add.overlap(this.bullets, this.players[this.otherPlayer], g, null, this);
 
         this.physics.add.collider(this.bullets, this.platforms);
         //this.physics.add.collider(this.bullets, this.players[this.otherPlayer]);
+
+        this.physics.add.overlap(this.bullets, this.playerData[this.otherPlayer], g, null, this);
+        this.physics.add.collider(this.bullets, this.playerData[this.otherPlayer]);
     }
 
     update (){
@@ -507,7 +585,7 @@ class Game extends Phaser.Scene {
                 this.player.anims.play(this.playerChar+'-left', true);
             }
         }
-        else
+        else if(!this.windMove)
         {
             this.player.setVelocityX(0);
 
@@ -574,6 +652,9 @@ class Game extends Phaser.Scene {
                 set(ref(this.db,`${this.gameCode}/spells/wind/`+id), {
                     id:id,
                     direction: dir,
+                    x: this.player.x,
+                    y: this.player.y,
+                    owner: this.playerNumber
                 })
             }
             else if (res=="gravup"){
@@ -594,14 +675,13 @@ class Game extends Phaser.Scene {
         // update ur position in firebase
         if (Math.round(this.player.x) != this.previousX || Math.round(this.player.y) != this.previousY || this.player.anims.currentAnim.key != this.prevAnim) {
             this.uref = ref(this.db, `${this.gameCode}/players/${this.playerNumber}`);
-            set(this.uref, {
+            update(this.uref, {
                 id: this.playerNumber,
                 playerCount: this.playerCount,
                 character: this.playerChar,
                 x: Math.round(this.player.x),
                 y: Math.floor(this.player.y),
                 animation: this.player.anims.currentAnim.key,
-                health: this.playerHealth.value
             })
         }
         this.previousX = Math.round(this.player.x);
@@ -667,7 +747,6 @@ class Game extends Phaser.Scene {
             p["x"] = (p["x"] - xmin) / ratio;
             p["y"] = (p["y"] - ymin) / ratio;
             var minD = 100;
-            console.log(p["x"]+" "+p["y"]);
             for(var i=0; i<=12; i++) {
                 for(var j in wind[i]) {
                     var d = (this.dist(i,wind[i][j],p["x"],p["y"]));
