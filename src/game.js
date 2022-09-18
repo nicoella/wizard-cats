@@ -337,7 +337,7 @@ class Game extends Phaser.Scene {
             this.players = snapshot.val() || {};
             Object.keys(this.players).forEach(characterKey => {
                 if (characterKey != this.playerNumber){
-                    console.log("ON VALUE");
+                    // console.log("ON VALUE");
                     const updatedPlayer = this.players[characterKey];
                     const curPlayer = this.playerData[characterKey];
                     curPlayer.x = updatedPlayer.x;
@@ -374,6 +374,21 @@ class Game extends Phaser.Scene {
             this.player.body.setGravityY(this.grav);
 
         });
+
+        onChildChanged(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
+            this.grav = snapshot.val();
+            console.log(this.globals);
+            this.player.body.setGravityY(this.grav);
+
+        });
+
+        // onValue(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
+        //     this.grav = snapshot.val();
+        //     if (this.grav !=)
+        //     console.log(this.globals);
+        //     this.player.body.setGravityY(this.grav);
+
+        // });
 
         // onValue(ref(this.db, `${this.gameCode}/globals`), (snapshot) => {
         //     this.grav = snapshot.val();
@@ -664,6 +679,12 @@ class Game extends Phaser.Scene {
                 this.player.body.setGravityY(300);
                 // this.playerData[this.otherPlayer].body.setGravityY(300);
             } 
+            else if (res=="gravdown"){
+                set(ref(this.db,`${this.gameCode}/globals`),{
+                    gravity:700
+                });
+                this.player.body.setGravityY(700);
+            }
             else {
 
             }
@@ -721,6 +742,21 @@ class Game extends Phaser.Scene {
         gravityUp[10] = [10];
         gravityUp[11] = [11];
         gravityUp[12] = [];
+
+        var gravityDown = {};
+        gravityDown[0] = [];
+        gravityDown[1] = [6];
+        gravityDown[2] = [7];
+        gravityDown[3] = [8];
+        gravityDown[4] = [9];
+        gravityDown[5] = [10];
+        gravityDown[6] = [11];
+        gravityDown[7] = [10];
+        gravityDown[8] = [9];
+        gravityDown[9] = [8];
+        gravityDown[10] = [7];
+        gravityDown[11] = [6];
+        gravityDown[12] = [];
 
         var rock = {};
         var fireball = {};
@@ -803,6 +839,37 @@ class Game extends Phaser.Scene {
         }
         
         if (gravUpHuh) return "gravup";
+
+        var gravDownHuh = true;
+        for(var i in points) {
+            var p = points[i];
+            var minD = 100;
+            console.log(p["x"]+" "+p["y"]);
+            for(var i=0; i<=12; i++) {
+                for(var j in gravityDown[i]) {
+                    var d = (this.dist(i,gravityDown[i][j],p["x"],p["y"]));
+                    if(d<minD) {
+                        minD = d;
+                    }
+                }
+            }
+            if(minD >= 4) {
+                gravDownHuh = false;
+            }
+        }
+        for(var i=0; i<=12; i++) {
+            for(var j in gravityDown[i]) {
+                var minD = 100;
+                for(var k in points) {
+                    var p = points[k];
+                    var d = (this.dist(i,gravityDown[i][j],p["x"],p["y"]));
+                    if(d<minD) minD = d;
+                }
+                if(minD >= 4) gravDownHuh = false;
+            }
+        }
+        
+        if (gravDownHuh) return "gravdown";
 
         return "none";
     }
