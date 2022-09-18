@@ -136,7 +136,12 @@ class Game extends Phaser.Scene {
         this.add.image(20,100,"health").setOrigin(0,0);
         this.add.image(780,100,"health").setOrigin(1,0);
 
-        this.player = this.physics.add.sprite(100, 450, this.playerChar).setDepth(1000);
+        if (this.playerCount == 1){
+            this.player = this.physics.add.sprite(100, 450, this.playerChar).setDepth(1000);
+        }
+        else{
+            this.player = this.physics.add.sprite(700, 450, this.playerChar).setDepth(1000);
+        }
 
         this.player.setBounce(0.2);
         this.player.body.setGravityY(700);
