@@ -100,6 +100,8 @@ class Game extends Phaser.Scene {
         this.load.image('player1_text','assets/player-1-text.png');
         this.load.image('player2_text','assets/player-2-text.png');
         this.load.image('health','assets/health-bar.png');
+        this.load.image('you-win','assets/you-win.png');
+        this.load.image('you-lose','assets/you-lose.png');
         this.load.spritesheet('tabby', 
             'assets/cat-tabby.png',
             { frameWidth: 52, frameHeight: 48 }
@@ -315,7 +317,7 @@ class Game extends Phaser.Scene {
                     curPlayer.anims.play(updatedPlayer.animation, true);
 
                     if (curPlayer.otherplayerHealth.value === 0){
-                        this.add.text(400,200,"you win!",{fontFamily: 'minecraft '}).setOrigin(0.5);
+                        this.add.image(400,100,'you-win').setOrigin(0.5).setScale(1.5);
                         this.scene.pause();
                     }
                 }
@@ -348,7 +350,7 @@ class Game extends Phaser.Scene {
                         update(this.uref, {health: this.playerHealth.value});
 
                         if (res == true){
-                            this.add.text(400,200,"you lose",{fontFamily: 'minecraft '}).setOrigin(0.5);
+                            this.add.image(400,100,'you-lose').setOrigin(0.5).setScale(1.5);
                             this.scene.pause();
                         }
                     }
