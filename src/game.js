@@ -74,7 +74,10 @@ class Game extends Phaser.Scene {
         this.firebaseApp = initializeApp(FBconfig);
         this.db = getDatabase(this.firebaseApp);
         this.playerData = {};
+        this.playerData = [];
         this.prevShoot = -100;
+        this.bulletImgs = {};
+        this.otherPlayer;
     }
 
     init(data)
@@ -262,9 +265,35 @@ class Game extends Phaser.Scene {
                     curPlayer.y = updatedPlayer.y;
                     curPlayer.body.velocity.x = 0;
                     curPlayer.body.velocity.y = 0;
+                    curPlayer.x = updatedPlayer.x;
+                    curPlayer.y = updatedPlayer.y;
                     curPlayer.anims.play(updatedPlayer.animation, true);
                 }
             })
+        })
+
+        onChildChanged(ref(this.db, `${this.gameCode}/bullets`), (snapshot) => {
+            const bullet = snapshot.val();
+            if(bullet.owner != this.playerNumber) {
+                if(this.bulletImgs[bullet.id]) this.bulletImgs[bullet.id].destroy();
+                if(bullet.status) {
+                    this.bulletImgs[bullet.id] = this.add.image(bullet.x,bullet.y,'orb');
+                    //console.log(bullet.x+" "+bullet.y+" "+this.player.x+" "+this.player.y)
+                    if(bullet.x >= this.player.x - 12 && bullet.x <= this.player.x + 12 && bullet.y >= this.player.y - 12 && bullet.y <= this.player.y + 12) {
+                        console.log("collision");
+                        console.log(bullet.id);
+                        console.log(this.gameCode);
+
+                        set(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${bullet.id}`), {
+                            x: bullet.x,
+                            y: bullet.y,
+                            id: bullet.id,
+                            status: false,
+                            owner:bullet.owner
+                        });
+                    }
+                }
+            }
         })
 
         onChildAdded(allPlayersRef, (snapshot) => { // draw all the other players
@@ -279,15 +308,18 @@ class Game extends Phaser.Scene {
                 newChar.setBounce(0.2);
                 newChar.body.setGravityY(700);
                 newChar.playerHealth = new HealthBar(this, 706, 107);
+                newChar.id = addedPlayer.id;
+                newChar.x = addedPlayer.x;
+                newChar.y = addedPlayer.y;
                 this.playerData[addedPlayer.id] = newChar;
+                this.otherPlayer = addedPlayer.id;
             }
             // var par = document.getElementById("box");
             // var bt = document.createElement("button");
             // bt.textContent = addedPlayer.x;
             // par.appendChild(bt);
         })
-
-        
+     
         // Bullet Class
         var Bullet = new Phaser.Class({
 
@@ -298,17 +330,18 @@ class Game extends Phaser.Scene {
             function Bullet (scene)
             {
                 Phaser.GameObjects.Image.call(this, scene, 0, 0, 'orb');
-    
                 this.speed = Phaser.Math.GetSpeed(500, 1);
-
             },
     
-            fire: function (x, y, rise, run, platforms, game)
+            fire: function (gameCode, id, x, y, rise, run, owner)
             {
                 this.setPosition(x, y);
 
                 this.rise = rise/(Math.sqrt(rise*rise+run*run));
                 this.run = run/Math.sqrt(rise*rise+run*run);
+                this.id = id;
+                this.gameCode = gameCode;
+                this.owner = owner;
 
                 this.setActive(true);
                 this.setVisible(true);
@@ -323,7 +356,26 @@ class Game extends Phaser.Scene {
                 {
                     this.setActive(false);
                     this.setVisible(false);
+                    update(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${this.id}`), { status: false });
+                    //if(this.id) ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets`).child(this.id).remove()
                 }
+                var status = true;
+                get(child(ref(getDatabase(initializeApp(FBconfig))), this.gameCode+`/bullets/${this.id}`)).then((data) => {
+                    for(var key in data.val()) {
+                        if(key=='status') status = data.val()[key];
+                    }
+                });
+                console.log(status);
+                if(this.gameCode && status) {
+                    set(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${this.id}`), {
+                        x: this.x,
+                        y: this.y,
+                        id: this.id,
+                        status: true,
+                        owner:this.owner
+                    });
+                }
+
             },
         });
     
@@ -337,10 +389,25 @@ class Game extends Phaser.Scene {
         function f (a, b) {
             a.setActive(false);
             a.setVisible(false);
+            update(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${a.id}`), { status: false });
+            //if(a.id) this.firebaseApp.database().ref(`${this.gameCode}/bullets/${a.id}`).remove();
+            //console.log(a.id);
+            //if(a.id) (ref(this.db,`${this.gameCode}/bullets/${a.id}`)).remove();
+            console.log(this.players[this.otherPlayer]+" "+this.otherPlayer+" "+this.players[this.otherPlayer].id);
         }
+/*
+        function g(a, b) {
+            a.setActive(false);
+            a.setVisible(false);
+            update(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${a.id}`), { status: false });
+            var otherHealth = this.playerData[this.otherPlayer].health - 5;
+            update(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/players/${this.otherPlayer}`), { health: otherHealth });
+        }*/
         this.physics.add.overlap(this.bullets, this.platforms, f, null, this);
+        //this.physics.add.overlap(this.bullets, this.players[this.otherPlayer], g, null, this);
 
         this.physics.add.collider(this.bullets, this.platforms);
+        //this.physics.add.collider(this.bullets, this.players[this.otherPlayer]);
     }
 
     update (){
@@ -398,10 +465,11 @@ class Game extends Phaser.Scene {
             if (bullet)
             {
                 if(this.prevShoot == -100 || (Date.now() - this.prevShoot)/1000 >= 1) {
-                    bullet.fire(this.player.x, this.player.y, (pointer.worldY - this.player.y)/Math.abs(pointer.worldX - this.player.x), (pointer.worldX - this.player.x)/Math.abs(pointer.worldX - this.player.x), this.platforms, this);
+                    bullet.fire(this.gameCode,Math.random().toString().split('.')[1], this.player.x, this.player.y, (pointer.worldY - this.player.y)/Math.abs(pointer.worldX - this.player.x), (pointer.worldX - this.player.x)/Math.abs(pointer.worldX - this.player.x), this.playerNumber);
                     this.prevShoot = Date.now();
                 }
             }
+            
         } else {
             this.prevShoot = -100;
         }

@@ -74,6 +74,7 @@ class Lobby extends Phaser.Scene {
                     id: this.playerNumber,
                     x: Math.floor(Math.random() * 100),
                     y: Math.floor(Math.random() * 100),
+                    health: 100,
                     animation: 0,
                 })
                 
