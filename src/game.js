@@ -619,11 +619,11 @@ class Game extends Phaser.Scene {
 
         var gravityUp = {};
         gravityUp[0] = [];
-        gravityUp[1] = [1];
-        gravityUp[2] = [2];
-        gravityUp[3] = [3];
-        gravityUp[4] = [4];
-        gravityUp[5] = [5];
+        gravityUp[1] = [11];
+        gravityUp[2] = [10];
+        gravityUp[3] = [9];
+        gravityUp[4] = [8];
+        gravityUp[5] = [7];
         gravityUp[6] = [6];
         gravityUp[7] = [7];
         gravityUp[8] = [8];
@@ -639,6 +639,7 @@ class Game extends Phaser.Scene {
         var xmax = this.maxX(points);
         var ymin = this.minY(points);
         var ymax = this.maxY(points);
+        console.log(xmin+" "+xmax+" "+ymin+" "+ymax);
         if(ymax-ymin > xmax-xmin) {
             var diff = (ymax-ymin) - (xmax-xmin);
             xmin -= diff;
@@ -686,8 +687,6 @@ class Game extends Phaser.Scene {
         var gravUpHuh = true;
         for(var i in points) {
             var p = points[i];
-            p["x"] = (p["x"] - xmin) / ratio;
-            p["y"] = (p["y"] - ymin) / ratio;
             var minD = 100;
             console.log(p["x"]+" "+p["y"]);
             for(var i=0; i<=12; i++) {
