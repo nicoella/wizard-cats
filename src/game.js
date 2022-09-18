@@ -84,6 +84,7 @@ class Game extends Phaser.Scene {
         this.prevY = -1;
         this.drawnPoints = [];
         this.wind;
+        this.windMove;
     }
 
     init(data)
@@ -170,14 +171,14 @@ class Game extends Phaser.Scene {
 
         this.anims.create({
             key: 'wind-left',
-            frames: this.anims.generateFrameNumbers("wind-left", { start: 0, end: 6}),
+            frames: this.anims.generateFrameNumbers("wind-left", { start: 0, end: 7}),
             frameRate: 10,
             repeat: -1
         })
 
         this.anims.create({
             key: 'wind-right',
-            frames: this.anims.generateFrameNumbers("wind-right", { start: 0, end: 6}),
+            frames: this.anims.generateFrameNumbers("wind-right", { start: 0, end: 7}),
             frameRate: 10,
             repeat: -1
         })
@@ -310,26 +311,51 @@ class Game extends Phaser.Scene {
             })
         })
 
+        onChildChanged(ref(this.db,`${this.gameCode}/players`), (snapshot) => {
+            const player = snapshot.val();
+            console.log(this.player.body.velocity.x);
+            if((Math.abs(this.player.body.velocity.x)<=30 || this.player.x >= 765 || this.player.x <= 40) && this.windMove) {
+                this.player.setVelocityX(0);
+                this.player.setAcceleration(0);
+                this.windMove = false;
+            }
+        });
+
         onChildAdded(ref(this.db,`${this.gameCode}/spells/wind/`), (snapshot) => {
             const wind = snapshot.val();
-            if(wind.direction=="right")this.wind = this.physics.add.sprite(this.player.x+65,this.player.y+6,"wind-"+wind.direction).setDepth(1000);
-            else this.wind = this.physics.add.sprite(this.player.x-95,this.player.y+6,"wind-"+wind.direction).setDepth(1000);
+            console.log("child added");
+            if(wind.direction=="right")this.wind = this.physics.add.sprite(wind.x+65,wind.y+6,"wind-"+wind.direction).setDepth(1000);
+            else this.wind = this.physics.add.sprite(wind.x-95,wind.y+6,"wind-"+wind.direction).setDepth(1000);
             
             this.wind.anims.play('wind-'+wind.direction, 10, false);
             this.wind.anims.stopAfterRepeat(0);
-            this.wind.once('animationcomplete', (box)=>{
-                this.wind.destroy()
-              })
+            this.wind.once('animationcomplete', ()=>{
+                this.destroy();
+            });
+
+            if(wind.owner!=this.playerNumber) {
+                    if(wind.direction=="left" && this.player.x <= this.wind.x+20 && this.player.x >= this.wind.x-130 && Math.abs(this.player.y - wind.y) <= 40) {
+                        this.player.setVelocityX(-300);
+                        this.player.setAcceleration(200);
+                        this.windMove = true;
+                    } else if(wind.direction=="right" && this.player.x>= this.wind.x && this.player.x <= this.wind.x + 150 && Math.abs(this.player.y - wind.y) <= 40) {
+                        this.player.setVelocityX(300);
+                        this.player.setAcceleration(-200);
+                        this.windMove = true;
+                    }
+            }
+            
         })
 
         onChildChanged(ref(this.db, `${this.gameCode}/bullets`), (snapshot) => {
             const bullet = snapshot.val();
-            if(bullet.owner != this.playerNumber) {
+            if(bullet.owner != this.playerNumber) { 
                 if(this.bulletImgs[bullet.id]) this.bulletImgs[bullet.id].destroy();
                 if(bullet.status) {
                     this.bulletImgs[bullet.id] = this.add.image(bullet.x,bullet.y,'orb');
                     //console.log(bullet.x+" "+bullet.y+" "+this.player.x+" "+this.player.y)
                     if(bullet.x >= this.player.x - 12 && bullet.x <= this.player.x + 12 && bullet.y >= this.player.y - 12 && bullet.y <= this.player.y + 12) {
+                        
                         console.log("collision");
                         console.log(bullet.id);
                         console.log(this.gameCode);
@@ -491,7 +517,7 @@ class Game extends Phaser.Scene {
                 this.player.anims.play(this.playerChar+'-left', true);
             }
         }
-        else
+        else if(!this.windMove)
         {
             this.player.setVelocityX(0);
 
@@ -558,6 +584,9 @@ class Game extends Phaser.Scene {
                 set(ref(this.db,`${this.gameCode}/spells/wind/`+id), {
                     id:id,
                     direction: dir,
+                    x: this.player.x,
+                    y: this.player.y,
+                    owner: this.playerNumber
                 })
             } else {
 
@@ -625,7 +654,6 @@ class Game extends Phaser.Scene {
             p["x"] = (p["x"] - xmin) / ratio;
             p["y"] = (p["y"] - ymin) / ratio;
             var minD = 100;
-            console.log(p["x"]+" "+p["y"]);
             for(var i=0; i<=12; i++) {
                 for(var j in wind[i]) {
                     var d = (this.dist(i,wind[i][j],p["x"],p["y"]));
