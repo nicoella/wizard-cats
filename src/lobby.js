@@ -176,7 +176,7 @@ class Lobby extends Phaser.Scene {
             const update = snapshot.val();
             console.log(update);
             if(update == true) {
-                this.scene.start("Game", { playerNumber: this.playerNumber, playerChar: this.prevSelect, gameCode: this.gameCode, playerCount: this.playerCount});
+                this.scene.start("Game", { playerNumber: this.playerNumber, playerChar: this.prevSelect, gameCode: this.gameCode, playerCount: this.playerCount, character: this.prevSelect});
             }
         });
 

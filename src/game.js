@@ -77,7 +77,13 @@ class Game extends Phaser.Scene {
         this.playerData = [];
         this.prevShoot = -100;
         this.bulletImgs = {};
+        this.character;
         this.otherPlayer;
+        this.drawnLines = [];
+        this.prevX = -1;
+        this.prevY = -1;
+        this.drawnPoints = [];
+        this.wind;
     }
 
     init(data)
@@ -87,6 +93,7 @@ class Game extends Phaser.Scene {
         this.gameCode = data.gameCode;
         this.playerChar = data.playerChar;
         this.playerCount = data.playerCount;
+        this.character = data.character;
     }
 
     preload (){
@@ -101,6 +108,18 @@ class Game extends Phaser.Scene {
         this.load.image('player1_text','assets/player-1-text.png');
         this.load.image('player2_text','assets/player-2-text.png');
         this.load.image('health','assets/health-bar.png');
+        this.load.image('draw-tabby','assets/draw-tabby.png');
+        this.load.image('draw-black','assets/draw-black.png');
+        this.load.image('draw-siamese','assets/draw-siamese.png');
+        this.load.image('draw-grey','assets/draw-grey.png');
+        this.load.spritesheet('wind-left',
+            'assets/wind-left.png',
+            { frameWidth: 68, frameHeight: 36 }
+        );
+        this.load.spritesheet('wind-right',
+            'assets/wind-right.png',
+            { frameWidth: 68, frameHeight: 36 }
+        );
         this.load.spritesheet('tabby', 
             'assets/cat-tabby.png',
             { frameWidth: 52, frameHeight: 48 }
@@ -148,6 +167,20 @@ class Game extends Phaser.Scene {
         this.player.setCollideWorldBounds(true);
 
         this.playerHealth = new HealthBar(this, 46, 107);
+
+        this.anims.create({
+            key: 'wind-left',
+            frames: this.anims.generateFrameNumbers("wind-left", { start: 0, end: 6}),
+            frameRate: 10,
+            repeat: -1
+        })
+
+        this.anims.create({
+            key: 'wind-right',
+            frames: this.anims.generateFrameNumbers("wind-right", { start: 0, end: 6}),
+            frameRate: 10,
+            repeat: -1
+        })
 
         this.anims.create({
             key: 'siamese-left',
@@ -277,6 +310,18 @@ class Game extends Phaser.Scene {
             })
         })
 
+        onChildAdded(ref(this.db,`${this.gameCode}/spells/wind/`), (snapshot) => {
+            const wind = snapshot.val();
+            if(wind.direction=="right")this.wind = this.physics.add.sprite(this.player.x+65,this.player.y+6,"wind-"+wind.direction).setDepth(1000);
+            else this.wind = this.physics.add.sprite(this.player.x-95,this.player.y+6,"wind-"+wind.direction).setDepth(1000);
+            
+            this.wind.anims.play('wind-'+wind.direction, 10, false);
+            this.wind.anims.stopAfterRepeat(0);
+            this.wind.once('animationcomplete', (box)=>{
+                this.wind.destroy()
+              })
+        })
+
         onChildChanged(ref(this.db, `${this.gameCode}/bullets`), (snapshot) => {
             const bullet = snapshot.val();
             if(bullet.owner != this.playerNumber) {
@@ -370,7 +415,6 @@ class Game extends Phaser.Scene {
                         if(key=='status') status = data.val()[key];
                     }
                 });
-                console.log(status);
                 if(this.gameCode && status) {
                     set(ref(getDatabase(initializeApp(FBconfig)), `${this.gameCode}/bullets/${this.id}`), {
                         x: this.x,
@@ -398,7 +442,7 @@ class Game extends Phaser.Scene {
             //if(a.id) this.firebaseApp.database().ref(`${this.gameCode}/bullets/${a.id}`).remove();
             //console.log(a.id);
             //if(a.id) (ref(this.db,`${this.gameCode}/bullets/${a.id}`)).remove();
-            console.log(this.players[this.otherPlayer]+" "+this.otherPlayer+" "+this.players[this.otherPlayer].id);
+            //console.log(this.players[this.otherPlayer]+" "+this.otherPlayer+" "+this.players[this.otherPlayer].id);
         }
 /*
         function g(a, b) {
@@ -423,7 +467,7 @@ class Game extends Phaser.Scene {
             left:Phaser.Input.Keyboard.KeyCodes.A,
             right:Phaser.Input.Keyboard.KeyCodes.D,
             spacebar:Phaser.Input.Keyboard.KeyCodes.SPACE
-        });;
+        });
 
         if (cursors.left.isDown)
         {
@@ -474,9 +518,53 @@ class Game extends Phaser.Scene {
                     this.prevShoot = Date.now();
                 }
             }
-            
         } else {
             this.prevShoot = -100;
+        }
+        if(pointer.rightButtonDown()) {
+            var graphics = this.add.graphics();
+            if(this.character=="black") {
+                graphics.lineStyle(5,0xa1d5ee, 1);
+            } else if(this.character=="tabby") {
+                graphics.lineStyle(5,0xae76d4, 1);
+            } else if(this.character=="grey") {
+                graphics.lineStyle(5,0xf8e287, 1);
+            } else if(this.character=="siamese") {
+                graphics.lineStyle(5,0xb8efaa, 1);
+            }
+            if(this.prevX != -1) this.drawnLines.push(graphics.lineBetween(this.prevX,this.prevY,pointer.worldX,pointer.worldY));
+            this.prevX = pointer.worldX;
+            this.prevY = pointer.worldY;
+            var point = {};
+            point["x"] = pointer.worldX;
+            point["y"] = pointer.worldY;
+            this.drawnPoints.push(point)
+        } else if(this.prevX != -1) {
+            var points = [];
+            for(const i of this.drawnLines) {
+                i.destroy();
+            }
+            this.drawnLines = [];
+            var res = this.checkDraw(this.drawnPoints);
+            console.log(res);
+            if(res=="wind") {
+                var dir;
+                if(pointer.worldX >= this.player.x) {
+                    dir = "right";
+                } else {
+                    dir = "left";
+                }
+                var id = Math.random().toString().split('.')[1];
+                set(ref(this.db,`${this.gameCode}/spells/wind/`+id), {
+                    id:id,
+                    direction: dir,
+                })
+            } else {
+
+            }
+            this.drawnPoints = [];
+            this.prevX = -1;
+            this.prevY = -1;
         }
 
         // update ur position in firebase
@@ -497,6 +585,108 @@ class Game extends Phaser.Scene {
         this.prevAnim = this.player.anims.currentAnim.key;
 
 
+    }
+
+    checkDraw(points) {
+        var wind = {};
+        wind[0] = [6];
+        wind[1] = [9];
+        wind[2] = [10];
+        wind[3] = [11];
+        wind[4] = [11.5];
+        wind[5] = [11.8,6];
+        wind[6] = [12,4];
+        wind[7] = [11.8,3.2];
+        wind[8] = [11.5,3];
+        wind[9] = [11,3.1];
+        wind[10] = [10.2,3.5];
+        wind[11] = [9,4.3];
+        wind[12] = [7,7];
+
+        var rock = {};
+        var fireball = {};
+
+        var xmin = this.minX(points);
+        var xmax = this.maxX(points);
+        var ymin = this.minY(points);
+        var ymax = this.maxY(points);
+        if(ymax-ymin > xmax-xmin) {
+            var diff = (ymax-ymin) - (xmax-xmin);
+            xmin -= diff;
+        } else {
+            var diff = (xmax-xmin) - (ymax-ymin);
+            ymin -= diff;
+        }
+        
+        var width = (xmax - xmin);
+        var ratio = width/12;
+        for(var i in points) {
+            var p = points[i];
+            p["x"] = (p["x"] - xmin) / ratio;
+            p["y"] = (p["y"] - ymin) / ratio;
+            var minD = 100;
+            console.log(p["x"]+" "+p["y"]);
+            for(var i=0; i<=12; i++) {
+                for(var j in wind[i]) {
+                    var d = (this.dist(i,wind[i][j],p["x"],p["y"]));
+                    if(d<minD) {
+                        minD = d;
+                    }
+                }
+            }
+            if(minD >= 3) {
+                return "none";
+            }
+        }
+        for(var i=0; i<=12; i++) {
+            for(var j in wind[i]) {
+                var minD = 100;
+                for(var k in points) {
+                    var p = points[k];
+                    var d = (this.dist(i,wind[i][j],p["x"],p["y"]));
+                    if(d<minD) minD = d;
+                }
+                if(minD >= 3) return "none";
+            }
+        }
+        
+        return "wind";
+    }
+
+    dist(x1,y1,x2,y2) {
+        return Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+    }
+
+    minX(points) {
+        var min = 900;
+        for(var i in points) {
+            min = Math.min(min,points[i]["x"]);
+        }
+        return min;
+    }
+
+    maxX(points) {
+        var max = -100;
+        for(var i in points) {
+            max = Math.max(max,points[i]["x"]);
+        }
+        return max;
+    }
+
+    minY(points) {
+        var min = 900;
+        for(var i in points) {
+            min = Math.min(min,points[i]["y"]);
+        }
+        return min;
+    }
+
+    maxY(points) {
+        var max = -100;
+        for(var i in points) {
+            max = Math.max(max,points[i]["y"]);
+        }
+        return max;
     }
 }
 
