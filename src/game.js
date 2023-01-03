@@ -4,7 +4,14 @@ import { getDatabase, set, ref, onValue, onChildAdded, onDisconnect, remove, upd
 
 
 const FBconfig = {
-    /* paste code from Firebase */
+    /* Replace the following code with your code from Firebase */
+    apiKey: "AIzaSyD7kDoMivEAcS7wpknNcpIvKPxvMvIJ8V0",
+    authDomain: "wizard-cats-cf2a4.firebaseapp.com",
+    projectId: "wizard-cats-cf2a4",
+    storageBucket: "wizard-cats-cf2a4.appspot.com",
+    messagingSenderId: "759561339478",
+    appId: "1:759561339478:web:262dad035f4e61782e71f7",
+    measurementId: "G-1F9NRXZKF6"
 };
 
 class HealthBar {
