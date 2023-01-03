@@ -4,13 +4,7 @@ import { getDatabase, set, ref, onValue, onChildAdded, onDisconnect, remove, upd
 
 
 const FBconfig = {
-    apiKey: "AIzaSyCICPepb-VHI8gyp7lnExZ7LDXHHBzrC20",
-    authDomain: "wiz-cats.firebaseapp.com",
-    databaseURL: "https://wiz-cats-default-rtdb.firebaseio.com",
-    projectId: "wiz-cats",
-    storageBucket: "wiz-cats.appspot.com",
-    messagingSenderId: "160626562720",
-    appId: "1:160626562720:web:55a12ada7c9952e98e5bc5"
+    /* paste code from Firebase */
 };
 
 class HealthBar {
