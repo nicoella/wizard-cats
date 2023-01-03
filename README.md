@@ -4,9 +4,17 @@ An online 1 vs 1 shooter game.
 ## Usage
 Create a new Firebase project (https://firebase.google.com).
 
-Add a Web App to the project. Keep Firebase hosting unchecked.
+Add a Web App to the project. Keep all settings default.
 
 Copy and paste the code within the `const firebaseConfig = {};`.
+
+Finish setting up the Web App by keeping all settings default.
+
+Add a new Authentication method. Enable Anonymous authentication.
+
+Add a new Realtime Database. Choose the United States as your location.
+
+Start in `test mode`. Note you will have to update the security settings eventually to continue using the database.
 
 Clone the repository:
 ```
