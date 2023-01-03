@@ -31,3 +31,7 @@ $ npm run br
 Visit the site at `http://localhost:5051`.
 
 Alternatively, change the port in the `package.json` file.
+
+## Authors
+* [Justin Zhu](https://github.com/astrocat879)
+* [Nicole Han](https://github.com/nicoella)
