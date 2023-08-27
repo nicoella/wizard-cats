@@ -1,1 +1,4 @@
-node_modules/
+node_modules
+dist/bundle.js
+dist/main.js.LICENSE.txt
+dist/main.js
