@@ -1,7 +1,18 @@
 # Wizard Cats
+
 An online 1 vs 1 shooter game.
 
 ## Usage
+
+Clone the repository:
+
+```
+$ git clone https://github.com/nicoella/wizard-cats
+$ cd wizard-cats
+```
+
+### Firebase Setup
+
 Create a new Firebase project (https://firebase.google.com).
 
 Add a Web App to the project. Keep all settings default.
@@ -16,22 +27,44 @@ Add a new Realtime Database. Choose the United States as your location.
 
 Start in `test mode`. Note you will have to update the security settings eventually to continue using the database.
 
-Clone the repository:
+Edit the `src/lobby.js` and `src/game.js` files with the copied Firebase code.
+
+### Backend
+
+Install MySQL if not already installed (https://dev.mysql.com/downloads/).
+
+Start MySQL server.
+
+Run the setup file (you may be prompted to enter your password set up at installation):
+
+Optional: Change the Admin user username and password in the `setup_mysql.sh` file and `src/main/resources/applications.properties` file.
+
 ```
-$ git clone https://github.com/nicoella/wizard-cats
-$ cd wizard-cats
+$ cd backend
+$ chmod +x setup_mysql.sh
+$ ./setup_mysql.sh
 ```
 
-Edit the `src/lobby.js` and `src/game.js` files with the code copied earlier.
+Run the backend:
 
-Run the site:
+```
+$ chmod +x run.sh
+$ ./run.sh
+```
+
+### Frontend
+
+Run the frontend:
+
 ```
 $ npm run br
 ```
+
 Visit the site at `http://localhost:5051`.
 
 Alternatively, change the port in the `package.json` file.
 
 ## Authors
-* [Justin Zhu](https://github.com/astrocat879)
-* [Nicole Han](https://github.com/nicoella)
+
+- [Justin Zhu](https://github.com/astrocat879)
+- [Nicole Han](https://github.com/nicoella)
