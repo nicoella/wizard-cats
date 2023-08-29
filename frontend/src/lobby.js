@@ -73,6 +73,7 @@ class Lobby extends Phaser.Scene {
     this.load.image("p-grey", "assets/portrait-grey.png");
     this.load.image("p-siamese", "assets/portrait-siamese.png");
     this.load.image("none", "assets/portrait-none.png");
+    this.load.image("return", "assets/return.png");
   }
 
   create() {
@@ -96,10 +97,6 @@ class Lobby extends Phaser.Scene {
         set(ref(this.db, `${this.gameCode}/properties`), {
           start: false,
         });
-
-        // set(ref(this.db, `${this.gameCode}/globals`), {
-        //     gravity: 700
-        // })
       } else {
         // User is signed out
         console.log("nope");
@@ -108,13 +105,10 @@ class Lobby extends Phaser.Scene {
     });
 
     signInAnonymously(this.auth)
-      .then(() => {
-        // Signed in..
-      })
+      .then(() => {})
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
-        // ...
       });
 
     this.add.image(400, 300, "bg");
@@ -129,24 +123,31 @@ class Lobby extends Phaser.Scene {
     this.waiting = this.add.image(770, 180, "waiting_text").setOrigin(1, 0);
     this.add.image(770, 230, "none").setOrigin(1, 0);
 
-    this.add.image(300, 435, "link_text").setOrigin(0);
+    this.add.image(300, 415, "link_text").setOrigin(0);
     this.add
       .text(
         460,
-        443,
+        423,
         this.gameCode.charAt(0) +
-          " " +
           this.gameCode.charAt(1) +
-          " " +
           this.gameCode.charAt(2) +
-          " " +
           this.gameCode.charAt(3),
-        { fontFamily: "minecraft " }
+        { fontFamily: "halfBold" }
       )
       .setOrigin(0.5);
-    this.add.image(400, 500, "start");
+    this.add.image(400, 480, "start");
 
-    // firebase stuff
+    this.add.image(400, 580, "profile").setOrigin(0.5, 1);
+    this.add
+      .text(403, 560, "GUEST", { fontFamily: "halfBold", color: "#000000" })
+      .setOrigin(0.5, 0.5);
+    this.add
+      .text(405, 558, "GUEST", { fontFamily: "halfBold", color: "#e1d9ff" })
+      .setOrigin(0.5, 0.5);
+
+    this.add.image(30, 30, "return").setOrigin(0, 0);
+
+    // firebase
     var thisPlayerRef = ref(
       this.db,
       this.gameCode + "/players/" + this.playerNumber
@@ -291,7 +292,6 @@ class Lobby extends Phaser.Scene {
     this.input.on(
       "pointerdown",
       function (pointer) {
-        //kinda buggy
         if (
           this.game.input.mousePointer.y >= 266 &&
           this.game.input.mousePointer.y <= 334
@@ -418,6 +418,14 @@ class Lobby extends Phaser.Scene {
               this.prevSelect = "siamese";
             }
           }
+        } else if (
+          this.game.input.mousePointer.y >= 30 &&
+          this.game.input.mousePointer.y <= 58 &&
+          this.game.input.mousePointer.x >= 30 &&
+          this.game.input.mousePointer.x <= 120
+        ) {
+          // return to main menu
+          this.scene.start("MainMenu");
         }
       },
       this
@@ -429,8 +437,8 @@ class Lobby extends Phaser.Scene {
         if (
           this.game.input.mousePointer.x >= 326 &&
           this.game.input.mousePointer.x <= 474 &&
-          this.input.mousePointer.y >= 471 &&
-          this.input.mousePointer.y <= 529
+          this.input.mousePointer.y >= 451 &&
+          this.input.mousePointer.y <= 509
         ) {
           console.log("lobby -> game");
           set(ref(this.db, `${this.gameCode}/properties`), {
