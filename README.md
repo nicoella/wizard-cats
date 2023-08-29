@@ -48,6 +48,7 @@ $ ./setup_mysql.sh
 Run the backend:
 
 ```
+$ cd backend
 $ chmod +x run.sh
 $ ./run.sh
 ```
@@ -57,6 +58,7 @@ $ ./run.sh
 Run the frontend:
 
 ```
+$ cd frontend
 $ npm run br
 ```
 
