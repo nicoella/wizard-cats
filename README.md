@@ -64,7 +64,7 @@ $ npm run br
 
 Visit the site at `http://localhost:5051`.
 
-Alternatively, change the port in the `package.json` file.
+Alternatively, change the port in the `src/server.js` file.
 
 ## Authors
 

@@ -2,6 +2,7 @@ class Join extends Phaser.Scene {
   constructor() {
     super({ key: "Join" });
     this.gameCode;
+    this.username = [];
   }
 
   preload() {
@@ -11,6 +12,7 @@ class Join extends Phaser.Scene {
     this.load.image("join", "assets/join.png");
     this.load.html("text", "assets/text.html");
     this.load.image("return", "assets/return.png");
+    this.load.image("profile", "assets/profile.png");
   }
 
   create() {
@@ -19,6 +21,17 @@ class Join extends Phaser.Scene {
     this.add.image(350, 320, "enter");
     this.add.image(400, 400, "join");
     document.getElementById("input").style.display = "block";
+
+    this.add.image(400, 580, "profile").setOrigin(0.5, 1);
+    this.username = [
+      this.add
+        .text(403, 560, "GUEST", { fontFamily: "halfBold", color: "#000000" })
+        .setOrigin(0.5, 0.5),
+      this.add
+        .text(405, 558, "GUEST", { fontFamily: "halfBold", color: "#e1d9ff" })
+        .setOrigin(0.5, 0.5),
+    ];
+    this.add.image(30, 30, "return").setOrigin(0, 0);
 
     this.input.on(
       "pointerdown",
@@ -45,13 +58,44 @@ class Join extends Phaser.Scene {
         ) {
           // return to main menu
           this.scene.start("MainMenu");
+          document.getElementById("input").style.display = "none";
         }
       },
       this
     );
   }
 
-  update() {}
+  update() {
+    for (var i = 0; i < this.username.length; i++) {
+      this.username[i].destroy();
+    }
+    const user = this.scene.get("Profile").user;
+    if (user != null) {
+      this.username = [
+        this.add
+          .text(403, 560, user.username, {
+            fontFamily: "halfBold",
+            color: "#000000",
+          })
+          .setOrigin(0.5, 0.5),
+        this.add
+          .text(405, 558, user.username, {
+            fontFamily: "halfBold",
+            color: "#e1d9ff",
+          })
+          .setOrigin(0.5, 0.5),
+      ];
+    } else {
+      this.username = [
+        this.add
+          .text(403, 560, "GUEST", { fontFamily: "halfBold", color: "#000000" })
+          .setOrigin(0.5, 0.5),
+        this.add
+          .text(405, 558, "GUEST", { fontFamily: "halfBold", color: "#e1d9ff" })
+          .setOrigin(0.5, 0.5),
+      ];
+    }
+  }
 }
 
 export default Join;

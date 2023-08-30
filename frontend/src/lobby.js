@@ -46,6 +46,7 @@ class Lobby extends Phaser.Scene {
     this.waiting;
     this.temp;
     this.gameCode = "";
+    this.username = [];
   }
 
   init(data) {
@@ -138,12 +139,14 @@ class Lobby extends Phaser.Scene {
     this.add.image(400, 480, "start");
 
     this.add.image(400, 580, "profile").setOrigin(0.5, 1);
-    this.add
-      .text(403, 560, "GUEST", { fontFamily: "halfBold", color: "#000000" })
-      .setOrigin(0.5, 0.5);
-    this.add
-      .text(405, 558, "GUEST", { fontFamily: "halfBold", color: "#e1d9ff" })
-      .setOrigin(0.5, 0.5);
+    this.username = [
+      this.add
+        .text(403, 560, "GUEST", { fontFamily: "halfBold", color: "#000000" })
+        .setOrigin(0.5, 0.5),
+      this.add
+        .text(405, 558, "GUEST", { fontFamily: "halfBold", color: "#e1d9ff" })
+        .setOrigin(0.5, 0.5),
+    ];
 
     this.add.image(30, 30, "return").setOrigin(0, 0);
 
@@ -450,7 +453,37 @@ class Lobby extends Phaser.Scene {
     );
   }
 
-  update() {}
+  update() {
+    for (var i = 0; i < this.username.length; i++) {
+      this.username[i].destroy();
+    }
+    const user = this.scene.get("Profile").user;
+    if (user != null) {
+      this.username = [
+        this.add
+          .text(403, 560, user.username, {
+            fontFamily: "halfBold",
+            color: "#000000",
+          })
+          .setOrigin(0.5, 0.5),
+        this.add
+          .text(405, 558, user.username, {
+            fontFamily: "halfBold",
+            color: "#e1d9ff",
+          })
+          .setOrigin(0.5, 0.5),
+      ];
+    } else {
+      this.username = [
+        this.add
+          .text(403, 560, "GUEST", { fontFamily: "halfBold", color: "#000000" })
+          .setOrigin(0.5, 0.5),
+        this.add
+          .text(405, 558, "GUEST", { fontFamily: "halfBold", color: "#e1d9ff" })
+          .setOrigin(0.5, 0.5),
+      ];
+    }
+  }
 }
 
 export default Lobby;

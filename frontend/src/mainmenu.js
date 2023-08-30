@@ -1,6 +1,7 @@
 class MainMenu extends Phaser.Scene {
   constructor() {
     super({ key: "MainMenu" });
+    this.username = [];
   }
 
   preload() {
@@ -13,12 +14,14 @@ class MainMenu extends Phaser.Scene {
   create() {
     this.add.image(400, 300, "mainmenu");
     this.add.image(400, 580, "profile").setOrigin(0.5, 1);
-    this.add
-      .text(403, 560, "GUEST", { fontFamily: "halfBold", color: "#000000" })
-      .setOrigin(0.5, 0.5);
-    this.add
-      .text(405, 558, "GUEST", { fontFamily: "halfBold", color: "#e1d9ff" })
-      .setOrigin(0.5, 0.5);
+    this.username = [
+      this.add
+        .text(403, 560, "GUEST", { fontFamily: "halfBold", color: "#000000" })
+        .setOrigin(0.5, 0.5),
+      this.add
+        .text(405, 558, "GUEST", { fontFamily: "halfBold", color: "#e1d9ff" })
+        .setOrigin(0.5, 0.5),
+    ];
 
     this.input.on(
       "pointerdown",
@@ -71,7 +74,37 @@ class MainMenu extends Phaser.Scene {
       this
     );
   }
-  update() {}
+  update() {
+    for (var i = 0; i < this.username.length; i++) {
+      this.username[i].destroy();
+    }
+    const user = this.scene.get("Profile").user;
+    if (user != null) {
+      this.username = [
+        this.add
+          .text(403, 560, user.username, {
+            fontFamily: "halfBold",
+            color: "#000000",
+          })
+          .setOrigin(0.5, 0.5),
+        this.add
+          .text(405, 558, user.username, {
+            fontFamily: "halfBold",
+            color: "#e1d9ff",
+          })
+          .setOrigin(0.5, 0.5),
+      ];
+    } else {
+      this.username = [
+        this.add
+          .text(403, 560, "GUEST", { fontFamily: "halfBold", color: "#000000" })
+          .setOrigin(0.5, 0.5),
+        this.add
+          .text(405, 558, "GUEST", { fontFamily: "halfBold", color: "#e1d9ff" })
+          .setOrigin(0.5, 0.5),
+      ];
+    }
+  }
 }
 
 export default MainMenu;
