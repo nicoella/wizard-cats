@@ -4,6 +4,7 @@ import MainMenu from "./mainmenu";
 import Lobby from "./lobby";
 import Join from "./join";
 import Profile from "./profile";
+import End from "./end";
 
 var config = {
   type: Phaser.AUTO,
@@ -17,7 +18,7 @@ var config = {
       gravity: { y: 0 },
     },
   },
-  scene: [MainMenu, Lobby, Game, Join, Profile],
+  scene: [MainMenu, Lobby, Game, Join, Profile, End],
 };
 
 function loadFont(name, url) {

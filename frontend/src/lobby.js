@@ -49,6 +49,23 @@ class Lobby extends Phaser.Scene {
     this.username = [];
   }
 
+  reset() {
+    this.playerNumber = Math.random().toString().split(".")[1];
+    this.selected = [];
+    this.playerData = {};
+    this.selected["black"] = false;
+    this.selected["tabby"] = false;
+    this.selected["grey"] = false;
+    this.selected["siamese"] = false;
+    this.portraits = [];
+    this.prevSelect = null;
+    this.playerCount = 0;
+    this.waiting = null;
+    this.temp = null;
+    this.gameCode = "";
+    this.username = [];
+  }
+
   init(data) {
     console.log("init", data);
     if (this.gameCode == "" && data.gameCode != undefined) {
@@ -99,8 +116,6 @@ class Lobby extends Phaser.Scene {
           start: false,
         });
       } else {
-        // User is signed out
-        console.log("nope");
       }
       onDisconnect(ref(this.db, `${this.gameCode}`)).remove();
     });
@@ -230,13 +245,20 @@ class Lobby extends Phaser.Scene {
       const update = snapshot.val();
       console.log(update);
       if (update == true) {
+        const playerNumber = this.playerNumber;
+        const playerChar = this.prevSelect;
+        const gameCode = this.gameCode;
+        const playerCount = this.playerCount;
+        this.reset();
         this.scene.start("Game", {
-          playerNumber: this.playerNumber,
-          playerChar: this.prevSelect,
-          gameCode: this.gameCode,
-          playerCount: this.playerCount,
-          character: this.prevSelect,
+          playerNumber: playerNumber,
+          playerChar: playerChar,
+          gameCode: gameCode,
+          playerCount: playerCount,
+          character: playerChar,
+          isPaused: false,
         });
+        this.scene.get("Game").isPaused = false;
       }
     });
 
@@ -248,6 +270,7 @@ class Lobby extends Phaser.Scene {
           this.selected["grey"] = false;
           this.selected["tabby"] = false;
           this.selected["siamese"] = false;
+          console.log(player.character);
           this.selected[player.character] = true;
           this.selected[this.prevSelect] = true;
           if (player.character == "black") {
@@ -428,6 +451,7 @@ class Lobby extends Phaser.Scene {
           this.game.input.mousePointer.x <= 120
         ) {
           // return to main menu
+          this.reset();
           this.scene.start("MainMenu");
         }
       },
@@ -440,8 +464,8 @@ class Lobby extends Phaser.Scene {
         if (
           this.game.input.mousePointer.x >= 326 &&
           this.game.input.mousePointer.x <= 474 &&
-          this.input.mousePointer.y >= 451 &&
-          this.input.mousePointer.y <= 509
+          this.game.input.mousePointer.y >= 451 &&
+          this.game.input.mousePointer.y <= 509
         ) {
           console.log("lobby -> game");
           set(ref(this.db, `${this.gameCode}/properties`), {

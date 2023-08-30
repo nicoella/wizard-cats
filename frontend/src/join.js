@@ -39,8 +39,8 @@ class Join extends Phaser.Scene {
         if (
           this.game.input.mousePointer.x >= 326 &&
           this.game.input.mousePointer.x <= 474 &&
-          this.input.mousePointer.y >= 371 &&
-          this.input.mousePointer.y <= 429
+          this.game.input.mousePointer.y >= 371 &&
+          this.game.input.mousePointer.y <= 429
         ) {
           console.log("join -> lobby");
           this.gameCode = document.getElementById("input").value;
@@ -50,6 +50,9 @@ class Join extends Phaser.Scene {
             gameCode: this.gameCode,
             playerCount: 2,
           });
+          this.scene.get("Lobby").gameCode = this.gameCode;
+          this.scene.get("Lobby").playerCount = 2;
+          document.getElementById("input").value = "";
         } else if (
           this.game.input.mousePointer.y >= 30 &&
           this.game.input.mousePointer.y <= 58 &&
@@ -59,6 +62,7 @@ class Join extends Phaser.Scene {
           // return to main menu
           this.scene.start("MainMenu");
           document.getElementById("input").style.display = "none";
+          document.getElementById("input").value = "";
         }
       },
       this

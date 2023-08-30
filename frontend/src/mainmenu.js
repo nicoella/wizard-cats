@@ -52,7 +52,10 @@ class MainMenu extends Phaser.Scene {
               );
               i++;
             }
-            this.scene.start("Lobby", { gameCode: gameCode, playerCount: 1 });
+            this.scene.get("Lobby").reset();
+            this.scene.start("Lobby");
+            this.scene.get("Lobby").gameCode = gameCode;
+            this.scene.get("Lobby").playerCount = 1;
           } else if (
             this.game.input.mousePointer.x >= 536 &&
             this.game.input.mousePointer.x <= 682
